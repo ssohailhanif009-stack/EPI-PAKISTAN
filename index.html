@@ -194,7 +194,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // UI Toggle Functions
+        // UI Toggle for Reset Form
         window.showResetForm = function(isReset) {
             if (isReset) {
                 document.getElementById('loginForm').style.display = 'none';
@@ -205,7 +205,7 @@
             }
         };
 
-        // Firebase Login Handler
+        // Firebase Cloud Login Handler
         window.handleLogin = async function(event) {
             event.preventDefault();
             const cnic = document.getElementById('loginCNIC').value.trim();
@@ -216,7 +216,6 @@
             loginBtn.innerText = 'Logging in...';
 
             try {
-                // Fetch user directly from Firebase Firestore using CNIC as Document ID
                 const userRef = doc(db, "users", cnic);
                 const userSnap = await getDoc(userRef);
 
@@ -236,7 +235,6 @@
                     return;
                 }
 
-                // Save session locally for app navigation
                 localStorage.setItem('currentUser', JSON.stringify(userData));
                 alert('Login Successful!');
 
@@ -253,7 +251,7 @@
             }
         };
 
-        // Firebase Password Reset Handler
+        // Firebase Cloud Password Reset Handler
         window.handleReset = async function(event) {
             event.preventDefault();
             const cnic = document.getElementById('resetCNIC').value.trim();
@@ -277,7 +275,6 @@
 
                 const userData = userSnap.data();
 
-                // Verify mobile number matches records
                 if (userData.mobile !== mobile) {
                     alert('Mobile number does not match with this CNIC record!');
                     resetBtn.disabled = false;
@@ -285,7 +282,6 @@
                     return;
                 }
 
-                // Update password in Firestore
                 await updateDoc(userRef, { password: newPassword });
 
                 alert('Password successfully updated! Now you can login.');
