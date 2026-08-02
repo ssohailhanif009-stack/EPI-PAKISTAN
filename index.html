@@ -3,52 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPI Pakistan - Login</title>
+    <title>EPI Pakistan - Login & Reset</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-        h2 { color: #1b4d3e; margin-bottom: 5px; font-size: 24px; }
-        .subtitle { color: #666; font-size: 13px; margin-bottom: 25px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #fafafa; }
-        input:focus { outline: none; border-color: #1b4d3e; background: #fff; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background-color: #2e7d32; color: white; font-size: 15px; margin-top: 10px; }
-        .btn:hover { background-color: #235d26; }
-        .links { margin-top: 20px; text-align: center; font-size: 13px; }
-        .links a { color: #1b4d3e; text-decoration: none; font-weight: 600; }
-        .links a:hover { text-decoration: underline; }
+        
+        body { 
+            background: linear-gradient(rgba(27, 77, 62, 0.85), rgba(20, 56, 45, 0.85)), 
+                        url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px;
+        }
+
+        .card { 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2); 
+            width: 100%; 
+            max-width: 450px; 
+            text-align: center;
+        }
+
+        .portal-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px auto;
+            display: block;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h2 { 
+            color: #1b4d3e; 
+            margin-bottom: 5px; 
+            font-size: 24px; 
+            font-weight: 700;
+        }
+
+        .subtitle { 
+            color: #555; 
+            font-size: 13px; 
+            margin-bottom: 20px; 
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .form-group { 
+            margin-bottom: 15px; 
+            text-align: left;
+        }
+
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            font-size: 13px; 
+            color: #333;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            font-size: 14px; 
+        }
+
+        input:focus { 
+            outline: none; 
+            border-color: #1b4d3e; 
+        }
+
+        .btn { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background-color: #1b4d3e; 
+            color: white; 
+            font-size: 15px; 
+            margin-top: 10px; 
+            transition: background 0.3s;
+        }
+
+        .btn:hover { 
+            background-color: #14382d; 
+        }
+
+        .btn-reset { 
+            background-color: #c62828; 
+        }
+
+        .btn-reset:hover { 
+            background-color: #8e0000; 
+        }
+
+        .links { 
+            margin-top: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 13px; 
+        }
+
+        .links a { 
+            color: #1b4d3e; 
+            text-decoration: none; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+
+        .links a:hover { 
+            text-decoration: underline; 
+        }
+
+        #resetForm { display: none; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Portal Login</h2>
-        <p class="subtitle">EPI Civil Hospital Naushahro Feroze</p>
+        <img src="logo.png" alt="EPI Logo" class="portal-logo">
 
-        <form id="loginForm">
+        <h2>EPI PAKISTAN PORTAL</h2>
+        <p class="subtitle">
+            Official Monitoring Web Portal<br>
+            <span style="font-size: 11px; color: #666;">Under the supervision of the Taluka Superintendent of Vaccination, Taluka Naushahro Feroze</span>
+        </p>
+        
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label>CNIC No.</label>
-                <input type="text" id="loginCnic" placeholder="42101-XXXXXXX-X" required>
+                <label>CNIC No. (as Username)</label>
+                <input type="text" id="loginCNIC" placeholder="42101-1234567-1" required>
             </div>
-
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
             </div>
-
-            <button type="submit" class="btn" id="loginBtn">Login to Portal</button>
+            <button type="submit" class="btn" id="loginBtn">Login</button>
+            <div class="links">
+                <a onclick="showResetForm(true)">Reset Password</a>
+                <a href="register.html">Register New User</a>
+            </div>
         </form>
 
-        <div class="links">
-            <p>Don't have an account? <a href="register.html">Register here</a></p>
-        </div>
+        <!-- RESET PASSWORD FORM -->
+        <form id="resetForm" onsubmit="handleReset(event)">
+            <h3 style="color: #c62828; margin-bottom: 15px; font-size: 16px;">Reset Password</h3>
+            <div class="form-group">
+                <label>Registered CNIC No.</label>
+                <input type="text" id="resetCNIC" placeholder="42101-1234567-1" required>
+            </div>
+            <div class="form-group">
+                <label>Registered Mobile No.</label>
+                <input type="text" id="resetMobile" placeholder="03XXXXXXXXX" required>
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" required>
+            </div>
+            <button type="submit" class="btn btn-reset" id="resetBtn">Update Password</button>
+            <div class="links" style="justify-content: center; margin-top: 15px;">
+                <a onclick="showResetForm(false)">← Back to Login</a>
+            </div>
+        </form>
     </div>
 
-    <!-- Firebase SDK Integration -->
+    <!-- Firebase SDK & Logic Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
@@ -63,23 +194,36 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // UI Toggle Functions
+        window.showResetForm = function(isReset) {
+            if (isReset) {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('resetForm').style.display = 'block';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('resetForm').style.display = 'none';
+            }
+        };
+
+        // Firebase Login Handler
+        window.handleLogin = async function(event) {
+            event.preventDefault();
+            const cnic = document.getElementById('loginCNIC').value.trim();
+            const password = document.getElementById('loginPassword').value;
             const loginBtn = document.getElementById('loginBtn');
+
             loginBtn.disabled = true;
             loginBtn.innerText = 'Logging in...';
 
-            const cnic = document.getElementById('loginCnic').value.trim();
-            const password = document.getElementById('loginPassword').value;
-
             try {
+                // Fetch user directly from Firebase Firestore using CNIC as Document ID
                 const userRef = doc(db, "users", cnic);
                 const userSnap = await getDoc(userRef);
 
                 if (!userSnap.exists()) {
                     alert('Invalid CNIC or Account not found!');
                     loginBtn.disabled = false;
-                    loginBtn.innerText = 'Login to Portal';
+                    loginBtn.innerText = 'Login';
                     return;
                 }
 
@@ -88,10 +232,11 @@
                 if (userData.password !== password) {
                     alert('Incorrect Password!');
                     loginBtn.disabled = false;
-                    loginBtn.innerText = 'Login to Portal';
+                    loginBtn.innerText = 'Login';
                     return;
                 }
 
+                // Save session locally for app navigation
                 localStorage.setItem('currentUser', JSON.stringify(userData));
                 alert('Login Successful!');
 
@@ -101,12 +246,59 @@
                     window.location.href = 'vaccinator.html';
                 }
             } catch (error) {
-                console.error("Login error: ", error);
+                console.error("Login Error: ", error);
                 alert('Login failed: ' + error.message);
                 loginBtn.disabled = false;
-                loginBtn.innerText = 'Login to Portal';
+                loginBtn.innerText = 'Login';
             }
-        });
+        };
+
+        // Firebase Password Reset Handler
+        window.handleReset = async function(event) {
+            event.preventDefault();
+            const cnic = document.getElementById('resetCNIC').value.trim();
+            const mobile = document.getElementById('resetMobile').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const resetBtn = document.getElementById('resetBtn');
+
+            resetBtn.disabled = true;
+            resetBtn.innerText = 'Updating...';
+
+            try {
+                const userRef = doc(db, "users", cnic);
+                const userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    alert('No account found with this CNIC!');
+                    resetBtn.disabled = false;
+                    resetBtn.innerText = 'Update Password';
+                    return;
+                }
+
+                const userData = userSnap.data();
+
+                // Verify mobile number matches records
+                if (userData.mobile !== mobile) {
+                    alert('Mobile number does not match with this CNIC record!');
+                    resetBtn.disabled = false;
+                    resetBtn.innerText = 'Update Password';
+                    return;
+                }
+
+                // Update password in Firestore
+                await updateDoc(userRef, { password: newPassword });
+
+                alert('Password successfully updated! Now you can login.');
+                resetBtn.disabled = false;
+                resetBtn.innerText = 'Update Password';
+                showResetForm(false);
+            } catch (error) {
+                console.error("Reset Error: ", error);
+                alert('Password reset failed: ' + error.message);
+                resetBtn.disabled = false;
+                resetBtn.innerText = 'Update Password';
+            }
+        };
     </script>
 </body>
 </html>
