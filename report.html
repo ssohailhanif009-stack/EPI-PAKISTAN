@@ -31,8 +31,6 @@
         .back-link { display: inline-block; margin-bottom: 15px; color: #fff; background: #1b4d3e; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; }
         .section-title { font-size: 15px; font-weight: bold; color: #1b4d3e; border-bottom: 2px solid #1b4d3e; padding-bottom: 5px; margin: 20px 0 15px 0; }
         .disabled-section { opacity: 0.5; pointer-events: none; }
-        
-        /* Print Styles - No Images */
         @media print {
             body { background: white !important; color: black !important; padding: 0; }
             .card { box-shadow: none; background: white !important; padding: 0; max-width: 100%; }
@@ -48,7 +46,6 @@
         <h2>Executive Vaccinator Administrative Reporting Form</h2>
         <p class="subtitle">EPI Civil Hospital Naushahro Feroze</p>
 
-        <!-- Date Specific Download Section for User -->
         <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; margin-bottom: 20px;" class="no-print">
             <label>Download Report PDF for Any Specific Date:</label>
             <div style="display: flex; gap: 10px; margin-top: 5px;">
@@ -57,7 +54,7 @@
             </div>
         </div>
 
-        <form id="reportingForm" onsubmit="submitReport(event)">
+        <form id="reportingForm">
             
             <div class="form-row">
                 <div class="form-group" style="flex: 1;">
@@ -124,7 +121,7 @@
             <div class="form-row">
                 <div class="form-group" style="flex: 1;">
                     <label>Attendance Status</label>
-                    <select id="attendance" onchange="handleAttendanceChange()" required>
+                    <select id="attendance" required>
                         <option value="">Select Attendance</option>
                         <option value="Present">Present</option>
                         <option value="Absent">Absent</option>
@@ -137,7 +134,6 @@
                 </div>
             </div>
 
-            <!-- Dynamic Container that disables when Absent or Leave -->
             <div id="reportFieldsContainer">
                 <div class="section-title">Operational Data & Stock Records</div>
 
@@ -198,13 +194,24 @@
         </form>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
-    <script>
-        window.onload = function() {
+        const firebaseConfig = {
+            apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
+            authDomain: "epi-portal.firebaseapp.com",
+            projectId: "epi-portal",
+            storageBucket: "epi-portal.firebasestorage.app",
+            messagingSenderId: "513980526499",
+            appId: "1:513980526499:web:5b3a1cfe761f93a0767416",
+            measurementId: "G-5JQZ3W8WWK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.addEventListener('DOMContentLoaded', () => {
             let today = new Date().toISOString().split('T')[0];
             document.getElementById('reportDate').value = today;
             document.getElementById('downloadDateInput').value = today;
@@ -214,11 +221,10 @@
                 if(document.getElementById('staffName')) document.getElementById('staffName').value = currentUser.fullName || '';
                 if(currentUser.unionCouncil) document.getElementById('unionCouncil').value = currentUser.unionCouncil;
                 if(currentUser.epiCenter) document.getElementById('epiCenter').value = currentUser.epiCenter;
-
-                checkTodaySubmission(currentUser.fullName, today);
             } else {
                 alert("No active session found. Please login first.");
                 window.location.href = "index.html";
+                return;
             }
 
             document.getElementById('tempRecordImg').addEventListener('change', function() {
@@ -227,56 +233,35 @@
                     document.getElementById('tempRecordTime').value = "Uploaded at: " + now;
                 }
             });
-        };
 
-        async function checkTodaySubmission(staffName, todayDate) {
-            try {
-                let snapshot = await db.collection('epi_daily_reports')
-                    .where('date', '==', todayDate)
-                    .where('staffName', '==', staffName)
-                    .get();
+            document.getElementById('attendance').addEventListener('change', function() {
+                let att = this.value;
+                let container = document.getElementById('reportFieldsContainer');
+                let timeField = document.getElementById('attendanceTime');
 
-                if (!snapshot.empty) {
-                    let form = document.getElementById('reportingForm');
-                    let elements = form.elements;
-                    for (let i = 0; i < elements.length; i++) {
-                        elements[i].disabled = true;
+                if (att === 'Present') {
+                    container.classList.remove('disabled-section');
+                    let now = new Date().toLocaleTimeString();
+                    timeField.value = "Marked Present at: " + now;
+                } else if (att === 'Absent' || att === 'Leave') {
+                    container.classList.add('disabled-section');
+                    timeField.value = "Marked " + att;
+                    if (att === 'Leave') {
+                        alert("Notice: It is mandatory to get leave approval from the TSV.");
                     }
-                    
-                    let notice = document.createElement('div');
-                    notice.style.cssText = "background: #ffebee; color: #c62828; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; text-align: center;";
-                    notice.innerHTML = "⚠️ You have already submitted your daily report for today. Only one submission per day is allowed.";
-                    form.prepend(notice);
+                } else {
+                    container.classList.remove('disabled-section');
+                    timeField.value = "";
                 }
-            } catch (error) {
-                console.error("Error checking submission:", error);
-            }
-        }
+            });
+        });
 
-        function handleAttendanceChange() {
-            let att = document.getElementById('attendance').value;
-            let container = document.getElementById('reportFieldsContainer');
-            let timeField = document.getElementById('attendanceTime');
-
-            if (att === 'Present') {
-                container.classList.remove('disabled-section');
-                let now = new Date().toLocaleTimeString();
-                timeField.value = "Marked Present at: " + now;
-            } else if (att === 'Absent' || att === 'Leave') {
-                container.classList.add('disabled-section');
-                timeField.value = "Marked " + att;
-                
-                if (att === 'Leave') {
-                    alert("Notice: It is mandatory to get leave approval from the TSV (Taluka Superintendent of Vaccination).");
-                }
-            } else {
-                container.classList.remove('disabled-section');
-                timeField.value = "";
-            }
-        }
-
-        function submitReport(event) {
+        document.getElementById('reportingForm').addEventListener('submit', async function(event) {
             event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting...';
+
             let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
             
             const reportDate = document.getElementById('reportDate').value;
@@ -288,6 +273,8 @@
 
             if(!attendance) {
                 alert('Please select attendance status.');
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Daily Report to Admin';
                 return;
             }
 
@@ -300,98 +287,95 @@
                 });
             };
 
-            async function processAndSave() {
-                let tempImg = '';
-                let panadolImg = '';
-                let sessionImg = '';
-                let vaccineImgs = [];
+            let tempImg = '';
+            let panadolImg = '';
+            let sessionImg = '';
+            let vaccineImgs = [];
 
-                if (attendance === 'Present') {
-                    tempImg = await readFileAsDataURL(document.getElementById('tempRecordImg').files[0]);
-                    panadolImg = await readFileAsDataURL(document.getElementById('panadolImg').files[0]);
-                    sessionImg = await readFileAsDataURL(document.getElementById('sessionImg').files[0]);
+            if (attendance === 'Present') {
+                tempImg = await readFileAsDataURL(document.getElementById('tempRecordImg').files[0]);
+                panadolImg = await readFileAsDataURL(document.getElementById('panadolImg').files[0]);
+                sessionImg = await readFileAsDataURL(document.getElementById('sessionImg').files[0]);
 
-                    let vaccineFileNodes = document.querySelectorAll('.vaccine-img');
-                    for(let fileInput of vaccineFileNodes) {
-                        if(fileInput.files[0]) {
-                            let imgData = await readFileAsDataURL(fileInput.files[0]);
-                            vaccineImgs.push(imgData);
-                        }
-                    }
-
-                    if(vaccineImgs.length < 4) {
-                        alert('Compulsory requirement: Please upload all 4 pictures for Vaccine Stock Book.');
-                        return;
+                let vaccineFileNodes = document.querySelectorAll('.vaccine-img');
+                for(let fileInput of vaccineFileNodes) {
+                    if(fileInput.files[0]) {
+                        let imgData = await readFileAsDataURL(fileInput.files[0]);
+                        vaccineImgs.push(imgData);
                     }
                 }
 
-                let lhwNames = [];
-                document.querySelectorAll('.lhw-name').forEach(input => {
-                    if(input.value.trim() !== '') lhwNames.push(input.value.trim());
-                });
-
-                let reportData = {
-                    date: reportDate,
-                    staffName: staffName,
-                    district: 'Naushahro Feroze',
-                    taluka: 'Naushahro Feroze',
-                    unionCouncil: unionCouncil,
-                    epiCenter: epiCenter,
-                    attendance: attendance,
-                    attendanceTime: attendanceTime,
-                    tempRecordTime: document.getElementById('tempRecordTime').value,
-                    tempImg: tempImg,
-                    vaccineImgs: vaccineImgs,
-                    panadolImg: panadolImg,
-                    sessionType: document.getElementById('sessionType').value,
-                    sessionImg: sessionImg,
-                    todayTarget: document.getElementById('todayTarget').value,
-                    lhwNames: lhwNames,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                try {
-                    await db.collection('epi_daily_reports').add(reportData);
-                    alert('Daily Administrative Report successfully submitted to Admin via Firebase!');
-                    location.reload();
-                } catch (error) {
-                    console.error("Error saving report: ", error);
-                    alert("Failed to submit report. Please check your internet connection.");
+                if(vaccineImgs.length < 4) {
+                    alert('Compulsory requirement: Please upload all 4 pictures for Vaccine Stock Book.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Submit Daily Report to Admin';
+                    return;
                 }
             }
 
-            processAndSave();
-        }
+            let lhwNames = [];
+            document.querySelectorAll('.lhw-name').forEach(input => {
+                if(input.value.trim() !== '') lhwNames.push(input.value.trim());
+            });
 
-        async function downloadPDFByDate() {
+            let reportData = {
+                date: reportDate,
+                staffName: staffName,
+                district: 'Naushahro Feroze',
+                taluka: 'Naushahro Feroze',
+                unionCouncil: unionCouncil,
+                epiCenter: epiCenter,
+                attendance: attendance,
+                attendanceTime: attendanceTime,
+                tempRecordTime: document.getElementById('tempRecordTime').value,
+                tempImg: tempImg,
+                vaccineImgs: vaccineImgs,
+                panadolImg: panadolImg,
+                sessionType: document.getElementById('sessionType').value,
+                sessionImg: sessionImg,
+                todayTarget: document.getElementById('todayTarget').value,
+                lhwNames: lhwNames,
+                isViewedTalukaAdmin: false
+            };
+
+            try {
+                // Save to Firestore
+                await addDoc(collection(db, 'epi_daily_reports'), reportData);
+
+                // Save to LocalStorage for Admin Dashboard Sync
+                let localReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+                localReports.push(reportData);
+                localStorage.setItem('epi_daily_reports', JSON.stringify(localReports));
+
+                alert('Daily Administrative Report successfully submitted to Admin!');
+                location.reload();
+            } catch (error) {
+                console.error("Error saving report: ", error);
+                alert("Failed to submit report: " + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Daily Report to Admin';
+            }
+        });
+
+        window.downloadPDFByDate = async function() {
             let targetDate = document.getElementById('downloadDateInput').value;
             let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
-            try {
-                let snapshot = await db.collection('epi_daily_reports')
-                    .where('date', '==', targetDate)
-                    .where('staffName', '==', currentUser.fullName)
-                    .get();
+            let localReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+            let foundReport = localReports.find(r => r.date === targetDate && r.staffName === currentUser.fullName);
 
-                if (snapshot.empty) {
-                    alert('No report found submitted for date: ' + targetDate);
-                    return;
-                }
-
-                let foundReport = snapshot.docs[0].data();
-
-                document.getElementById('reportDate').value = foundReport.date;
-                document.getElementById('attendance').value = foundReport.attendance;
-                document.getElementById('attendanceTime').value = foundReport.attendanceTime;
-                document.getElementById('sessionType').value = foundReport.sessionType || '';
-                document.getElementById('todayTarget').value = foundReport.todayTarget || '';
-                
-                handleAttendanceChange();
-                window.print();
-            } catch (error) {
-                console.error("Error fetching report for PDF:", error);
+            if (!foundReport) {
+                alert('No report found submitted for date: ' + targetDate);
+                return;
             }
-        }
+
+            document.getElementById('reportDate').value = foundReport.date;
+            document.getElementById('attendance').value = foundReport.attendance;
+            document.getElementById('attendanceTime').value = foundReport.attendanceTime;
+            document.getElementById('sessionType').value = foundReport.sessionType || '';
+            document.getElementById('todayTarget').value = foundReport.todayTarget || '';
+            window.print();
+        };
     </script>
 </body>
 </html>
