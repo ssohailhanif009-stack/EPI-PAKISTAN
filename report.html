@@ -198,6 +198,11 @@
         </form>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script> <!-- Yahan aapki firebase config file connect hogi -->
+
     <script>
         window.onload = function() {
             let today = new Date().toISOString().split('T')[0];
@@ -210,7 +215,7 @@
                 if(currentUser.unionCouncil) document.getElementById('unionCouncil').value = currentUser.unionCouncil;
                 if(currentUser.epiCenter) document.getElementById('epiCenter').value = currentUser.epiCenter;
 
-                // Check if user has already submitted a report for today
+                // Check if user has already submitted a report for today from Firebase/Local
                 checkTodaySubmission(currentUser.fullName, today);
             } else {
                 alert("No active session found. Please login first.");
@@ -226,23 +231,27 @@
             });
         };
 
-        function checkTodaySubmission(staffName, todayDate) {
-            let allReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-            let alreadySubmitted = allReports.some(r => r.date === todayDate && r.staffName.toLowerCase() === staffName.toLowerCase());
+        async function checkTodaySubmission(staffName, todayDate) {
+            try {
+                let snapshot = await db.collection('epi_daily_reports')
+                    .where('date', '==', todayDate)
+                    .where('staffName', '==', staffName)
+                    .get();
 
-            if (alreadySubmitted) {
-                let form = document.getElementById('reportingForm');
-                // Disable all inputs and select fields inside the form
-                let elements = form.elements;
-                for (let i = 0; i < elements.length; i++) {
-                    elements[i].disabled = true;
+                if (!snapshot.empty) {
+                    let form = document.getElementById('reportingForm');
+                    let elements = form.elements;
+                    for (let i = 0; i < elements.length; i++) {
+                        elements[i].disabled = true;
+                    }
+                    
+                    let notice = document.createElement('div');
+                    notice.style.cssText = "background: #ffebee; color: #c62828; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; text-align: center;";
+                    notice.innerHTML = "⚠️ You have already submitted your daily report for today. Only one submission per day is allowed.";
+                    form.prepend(notice);
                 }
-                
-                // Show notice banner
-                let notice = document.createElement('div');
-                notice.style.cssText = "background: #ffebee; color: #c62828; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; text-align: center;";
-                notice.innerHTML = "⚠️ You have already submitted your daily report for today. Only one submission per day is allowed.";
-                form.prepend(notice);
+            } catch (error) {
+                console.error("Error checking submission:", error);
             }
         }
 
@@ -274,17 +283,6 @@
             
             const reportDate = document.getElementById('reportDate').value;
             const staffName = currentUser.fullName || document.getElementById('staffName').value;
-            
-            // Double check validation for single submission per day
-            let allReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-            let alreadySubmitted = allReports.some(r => r.date === reportDate && r.staffName.toLowerCase() === staffName.toLowerCase());
-            
-            if (alreadySubmitted) {
-                alert('Restriction: You have already submitted a report for today. Only one submission per day is permitted.');
-                location.reload();
-                return;
-            }
-
             const unionCouncil = currentUser.unionCouncil || document.getElementById('unionCouncil').value;
             const epiCenter = currentUser.epiCenter || document.getElementById('epiCenter').value;
             const attendance = document.getElementById('attendance').value;
@@ -295,7 +293,6 @@
                 return;
             }
 
-            // Helper to read files as Base64
             const readFileAsDataURL = (file) => {
                 return new Promise((resolve) => {
                     if (!file) { resolve(''); return; }
@@ -351,51 +348,52 @@
                     sessionType: document.getElementById('sessionType').value,
                     sessionImg: sessionImg,
                     todayTarget: document.getElementById('todayTarget').value,
-                    lhwNames: lhwNames
+                    lhwNames: lhwNames,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                let updatedReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-                // Re-verify before final push
-                let checkAgain = updatedReports.some(r => r.date === reportDate && r.staffName.toLowerCase() === staffName.toLowerCase());
-                if (checkAgain) {
-                    alert('Restriction: Report for today has already been registered.');
+                try {
+                    // Save to Firebase Firestore Collection 'epi_daily_reports'
+                    await db.collection('epi_daily_reports').add(reportData);
+                    alert('Daily Administrative Report successfully submitted to Admin via Firebase!');
                     location.reload();
-                    return;
+                } catch (error) {
+                    console.error("Error saving report: ", error);
+                    alert("Failed to submit report. Please check your internet connection.");
                 }
-
-                updatedReports.push(reportData);
-                localStorage.setItem('epi_daily_reports', JSON.stringify(updatedReports));
-
-                alert('Daily Administrative Report successfully submitted to Admin!');
-                location.reload();
             }
 
             processAndSave();
         }
 
-        function downloadPDFByDate() {
+        async function downloadPDFByDate() {
             let targetDate = document.getElementById('downloadDateInput').value;
             let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-            let allReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
 
-            let foundReport = allReports.find(r => r.date === targetDate && r.staffName.toLowerCase() === currentUser.fullName.toLowerCase());
+            try {
+                let snapshot = await db.collection('epi_daily_reports')
+                    .where('date', '==', targetDate)
+                    .where('staffName', '==', currentUser.fullName)
+                    .get();
 
-            if (!foundReport) {
-                alert('No report found submitted for date: ' + targetDate);
-                return;
+                if (snapshot.empty) {
+                    alert('No report found submitted for date: ' + targetDate);
+                    return;
+                }
+
+                let foundReport = snapshot.docs[0].data();
+
+                document.getElementById('reportDate').value = foundReport.date;
+                document.getElementById('attendance').value = foundReport.attendance;
+                document.getElementById('attendanceTime').value = foundReport.attendanceTime;
+                document.getElementById('sessionType').value = foundReport.sessionType || '';
+                document.getElementById('todayTarget').value = foundReport.todayTarget || '';
+                
+                handleAttendanceChange();
+                window.print();
+            } catch (error) {
+                console.error("Error fetching report for PDF:", error);
             }
-
-            // Populate form fields temporarily with that date's data to print cleanly without pictures
-            document.getElementById('reportDate').value = foundReport.date;
-            document.getElementById('attendance').value = foundReport.attendance;
-            document.getElementById('attendanceTime').value = foundReport.attendanceTime;
-            document.getElementById('sessionType').value = foundReport.sessionType || '';
-            document.getElementById('todayTarget').value = foundReport.todayTarget || '';
-            
-            handleAttendanceChange();
-
-            // Trigger browser print dialog (User can save as PDF without pictures due to print CSS media query)
-            window.print();
         }
     </script>
 </body>
