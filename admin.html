@@ -74,7 +74,7 @@
     <div class="sidebar">
         <div class="sidebar-logo">
             <img src="logo.png" alt="EPI Logo">
-            <h2>EPI PAKISTAN PORTAL<br><span style="font-size: 11px; color: #b2dfdb; font-weight: normal;">TalukaNaushahro Feroze</span></h2>
+            <h2>EPI PAKISTAN PORTAL<br><span style="font-size: 11px; color: #b2dfdb; font-weight: normal;">Taluka Naushahro Feroze</span></h2>
         </div>
         <ul>
             <li><a href="#" onclick="showSection('overviewSection')">Dashboard Overview</a></li>
@@ -294,7 +294,7 @@
     <!-- Firebase SDK & Script Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
@@ -308,6 +308,10 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Global arrays to hold live Firebase data for filtering and modals
+        window.allReports = [];
+        window.allLeaves = [];
 
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminData();
@@ -331,7 +335,7 @@
 
                 querySnapshot.forEach((documentSnapshot) => {
                     const u = documentSnapshot.data();
-                    const cnicKey = documentSnapshot.id; // Document ID is CNIC
+                    const cnicKey = documentSnapshot.id;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -368,34 +372,112 @@
                 }
             }
         };
+
+        // Load Compliance Reports from Firebase Firestore (`epi_daily_reports`)
+        window.loadComplianceReports = async function() {
+            const tbody = document.getElementById('complianceTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#666;">Loading live compliance reports...</td></tr>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "epi_daily_reports"));
+                window.allReports = [];
+                querySnapshot.forEach((docSnap) => {
+                    window.allReports.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // Fallback to local storage if firebase is empty
+                if (window.allReports.length === 0) {
+                    let localReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+                    window.allReports = localReports.map((rep, idx) => ({ id: 'local_' + idx, ...rep }));
+                }
+
+                window.allReports.sort((a, b) => {
+                    let viewedA = a.isViewedTalukaAdmin ? 1 : 0;
+                    let viewedB = b.isViewedTalukaAdmin ? 1 : 0;
+                    return viewedA - viewedB;
+                });
+
+                renderComplianceTable(window.allReports);
+            } catch (error) {
+                console.error("Error loading reports: ", error);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Failed to load compliance reports from cloud.</td></tr>';
+            }
+        };
+
+        // Load Leave Requests from Firebase Firestore (`epi_leave_requests`)
+        window.loadLeaveRequests = async function() {
+            const tbody = document.getElementById('leaveTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#666;">Loading live leave applications...</td></tr>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "epi_leave_requests"));
+                window.allLeaves = [];
+                querySnapshot.forEach((docSnap) => {
+                    window.allLeaves.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // Fallback to local storage if firebase is empty
+                if (window.allLeaves.length === 0) {
+                    let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+                    window.allLeaves = localLeaves.map((l, idx) => ({ id: 'local_' + idx, ...l }));
+                }
+
+                window.allLeaves.sort((a, b) => {
+                    let statusA = (a.status || 'Pending').trim();
+                    let statusB = (b.status || 'Pending').trim();
+                    if (statusA === 'Pending' && statusB !== 'Pending') return -1;
+                    if (statusA !== 'Pending' && statusB === 'Pending') return 1;
+                    return 0;
+                });
+
+                renderLeaveTable(window.allLeaves);
+            } catch (error) {
+                console.error("Error loading leaves: ", error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Failed to load leave applications from cloud.</td></tr>';
+            }
+        };
+
+        // Update Leave Status in Firebase Firestore
+        window.updateLeaveStatus = async function(docId, status) {
+            try {
+                if (!docId.startsWith('local_')) {
+                    await updateDoc(doc(db, "epi_leave_requests", docId), { status: status });
+                }
+                
+                // Also update local array/storage backup
+                let leaveObj = window.allLeaves.find(l => l.id === docId);
+                if(leaveObj) leaveObj.status = status;
+
+                loadLeaveRequests();
+                alert('Leave request status updated to ' + status);
+            } catch (error) {
+                console.error("Error updating leave status: ", error);
+                alert("Failed to update status: " + error.message);
+            }
+        };
+
+        // Mark report as viewed in Firestore
+        window.markReportViewedFirestore = async function(docId) {
+            try {
+                if (!docId.startsWith('local_')) {
+                    await updateDoc(doc(db, "epi_daily_reports", docId), { isViewedTalukaAdmin: true });
+                }
+            } catch (e) {
+                console.error("Error marking viewed:", e);
+            }
+        };
     </script>
 
     <script>
-        // Print Registered Users Directory Cleanly
         function printUsersDirectory() {
             document.body.classList.remove('modal-open');
             window.print();
         }
 
-        // Print Compliance Report Modal Cleanly
         function printReportModal() {
             document.body.classList.add('modal-open');
             window.print();
             document.body.classList.remove('modal-open');
-        }
-
-        // Load Compliance Reports into Line List Table
-        function loadComplianceReports() {
-            let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-            let mappedReports = reports.map((rep, idx) => ({ ...rep, storageIndex: idx }));
-
-            mappedReports.sort((a, b) => {
-                let viewedA = a.isViewedTalukaAdmin ? 1 : 0;
-                let viewedB = b.isViewedTalukaAdmin ? 1 : 0;
-                return viewedA - viewedB;
-            });
-
-            renderComplianceTable(mappedReports);
         }
 
         function renderComplianceTable(reports) {
@@ -420,23 +502,20 @@
                     <td>${rep.epiCenter || 'N/A'}</td>
                     <td>${statusText}</td>
                     <td>${rep.attendanceTime || 'N/A'}</td>
-                    <td><button class="btn-action btn-proof" onclick="openReportModal(${rep.storageIndex})">View Report</button></td>
+                    <td><button class="btn-action btn-proof" onclick="openReportModal('${rep.id}')">View Report</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         function filterComplianceReports() {
-            let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-            let mappedReports = reports.map((rep, idx) => ({ ...rep, storageIndex: idx }));
-
             let nameVal = document.getElementById('searchCompName').value.toLowerCase();
             let ucVal = document.getElementById('searchCompUC').value;
             let centerVal = document.getElementById('searchCompCenter').value;
             let fromVal = document.getElementById('filterCompFromDate').value;
             let toVal = document.getElementById('filterCompToDate').value;
 
-            let filtered = mappedReports.filter(r => {
+            let filtered = window.allReports.filter(r => {
                 let matchName = (r.staffName || '').toLowerCase().includes(nameVal);
                 let matchUC = !ucVal || r.unionCouncil === ucVal;
                 let matchCenter = !centerVal || r.epiCenter === centerVal;
@@ -463,7 +542,7 @@
             document.getElementById('searchCompCenter').value = '';
             document.getElementById('filterCompFromDate').value = '';
             document.getElementById('filterCompToDate').value = '';
-            loadComplianceReports();
+            renderComplianceTable(window.allReports);
         }
 
         function downloadImage(imgSrc) {
@@ -476,13 +555,12 @@
             document.body.removeChild(a);
         }
 
-        function openReportModal(index) {
-            let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-            let rep = reports[index];
+        function openReportModal(reportId) {
+            let rep = window.allReports.find(r => r.id === reportId);
             if (!rep) return;
 
-            reports[index].isViewedTalukaAdmin = true;
-            localStorage.setItem('epi_daily_reports', JSON.stringify(reports));
+            rep.isViewedTalukaAdmin = true;
+            markReportViewedFirestore(reportId);
 
             let lhwHtml = rep.lhwNames && rep.lhwNames.length > 0 ? rep.lhwNames.join(', ') : 'None listed';
             let vaccineImgsHtml = '';
@@ -495,12 +573,12 @@
             }
 
             let bodyContent = `
-                <p><b>Date:</b> ${rep.date}</p>
-                <p><b>Staff Name:</b> ${rep.staffName}</p>
-                <p><b>District / Taluka:</b> ${rep.district} / ${rep.taluka}</p>
-                <p><b>Union Council:</b> ${rep.unionCouncil}</p>
-                <p><b>Assigned EPI Center:</b> ${rep.epiCenter}</p>
-                <p><b>Attendance Status:</b> ${rep.attendance} (${rep.attendanceTime || ''})</p>
+                <p><b>Date:</b> ${rep.date || 'N/A'}</p>
+                <p><b>Staff Name:</b> ${rep.staffName || 'N/A'}</p>
+                <p><b>District / Taluka:</b> ${rep.district || 'Naushahro Feroze'} / ${rep.taluka || 'Naushahro Feroze'}</p>
+                <p><b>Union Council:</b> ${rep.unionCouncil || 'N/A'}</p>
+                <p><b>Assigned EPI Center:</b> ${rep.epiCenter || 'N/A'}</p>
+                <p><b>Attendance Status:</b> ${rep.attendance || 'N/A'} (${rep.attendanceTime || ''})</p>
                 <hr style="margin: 10px 0; border:0; border-top:1px solid #ddd;">
                 <p><b>Session Type:</b> ${rep.sessionType || 'N/A'}</p>
                 <p><b>Today's Target:</b> ${rep.todayTarget || 'N/A'}</p>
@@ -533,23 +611,7 @@
 
         function closeReportModal() {
             document.getElementById('reportModal').style.display = 'none';
-            loadComplianceReports();
-        }
-
-        function loadLeaveRequests() {
-            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-            let mappedLeaves = leaves.map((l, idx) => ({ ...l, storageIndex: idx }));
-
-            mappedLeaves.sort((a, b) => {
-                let statusA = (a.status || 'Pending').trim();
-                let statusB = (b.status || 'Pending').trim();
-                
-                if (statusA === 'Pending' && statusB !== 'Pending') return -1;
-                if (statusA !== 'Pending' && statusB === 'Pending') return 1;
-                return 0;
-            });
-
-            renderLeaveTable(mappedLeaves);
+            renderComplianceTable(window.allReports);
         }
 
         function renderLeaveTable(leaves) {
@@ -576,19 +638,21 @@
                     statusBadge = '<span style="color: #f57c00; font-weight: bold;">Pending Review</span>';
                 }
 
+                let leaveImgSrc = leave.leaveDocImg || leave.proofImage || '';
+
                 const tr = document.createElement('tr');
                 tr.className = rowClass;
                 tr.innerHTML = `
-                    <td>${leave.fromDate}</td>
-                    <td><b>${leave.staffName}</b></td>
+                    <td>${leave.startDate || leave.fromDate || leave.appliedAt || 'N/A'}</td>
+                    <td><b>${leave.staffName || 'N/A'}</b></td>
                     <td>${leave.unionCouncil || 'N/A'}</td>
                     <td>${leave.epiCenter || 'N/A'}</td>
-                    <td>${leave.reason || leave.leaveReason || 'N/A'}</td>
-                    <td><button class="btn-action btn-proof" onclick="viewProof('${leave.proofImage}')">View Image</button></td>
+                    <td>${leave.reason || 'N/A'}</td>
+                    <td><button class="btn-action btn-proof" onclick="viewProof('${leaveImgSrc}')">View Image</button></td>
                     <td>${statusBadge}</td>
                     <td>
-                        <button class="btn-action btn-approve" onclick="updateLeaveStatus(${leave.storageIndex}, 'Approved')">Approved</button>
-                        <button class="btn-action btn-reject" onclick="updateLeaveStatus(${leave.storageIndex}, 'Rejected')">Reject</button>
+                        <button class="btn-action btn-approve" onclick="updateLeaveStatus('${leave.id}', 'Approved')">Approved</button>
+                        <button class="btn-action btn-reject" onclick="updateLeaveStatus('${leave.id}', 'Rejected')">Reject</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -596,23 +660,21 @@
         }
 
         function filterLeaves() {
-            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-            let mappedLeaves = leaves.map((l, idx) => ({ ...l, storageIndex: idx }));
-
             let nameVal = document.getElementById('searchName').value.toLowerCase();
             let ucVal = document.getElementById('searchUC').value;
             let centerVal = document.getElementById('searchCenter').value;
             let fromVal = document.getElementById('filterFromDate').value;
             let toVal = document.getElementById('filterToDate').value;
 
-            let filtered = mappedLeaves.filter(l => {
+            let filtered = window.allLeaves.filter(l => {
                 let matchName = (l.staffName || '').toLowerCase().includes(nameVal);
                 let matchUC = !ucVal || l.unionCouncil === ucVal;
                 let matchCenter = !centerVal || l.epiCenter === centerVal;
                 
                 let matchDate = true;
-                if (fromVal && l.fromDate < fromVal) matchDate = false;
-                if (toVal && l.fromDate > toVal) matchDate = false;
+                let lDate = l.startDate || l.fromDate || '';
+                if (fromVal && lDate < fromVal) matchDate = false;
+                if (toVal && lDate > toVal) matchDate = false;
 
                 return matchName && matchUC && matchCenter && matchDate;
             });
@@ -634,20 +696,11 @@
             document.getElementById('searchCenter').value = '';
             document.getElementById('filterFromDate').value = '';
             document.getElementById('filterToDate').value = '';
-            loadLeaveRequests();
-        }
-
-        function updateLeaveStatus(storageIndex, status) {
-            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-            if(leaves[storageIndex]) {
-                leaves[storageIndex].status = status;
-                localStorage.setItem('epi_leave_requests', JSON.stringify(leaves));
-                loadLeaveRequests();
-            }
+            renderLeaveTable(window.allLeaves);
         }
 
         function viewProof(imgSrc) {
-            if(!imgSrc || imgSrc === 'undefined') {
+            if(!imgSrc || imgSrc === 'undefined' || imgSrc === '') {
                 alert("No leave image attached to this application.");
                 return;
             }
