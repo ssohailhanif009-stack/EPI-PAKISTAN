@@ -27,7 +27,7 @@
         <h2>New User Registration</h2>
         <p class="subtitle">EPI Civil Hospital Naushahro Feroze</p>
 
-        <form onsubmit="handleRegister(event)">
+        <form id="registerForm">
             <div class="form-row">
                 <div class="form-group">
                     <label>Full Name</label>
@@ -45,7 +45,7 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>CNIC No.</label>
+                    <label>CNIC No. (Used for Login)</label>
                     <input type="text" id="cnic" placeholder="42101-XXXXXXX-X" required>
                 </div>
                 <div class="form-group">
@@ -110,7 +110,7 @@
                 <input type="password" id="regPassword" placeholder="Create password" required>
             </div>
 
-            <button type="submit" class="btn">Register & Proceed</button>
+            <button type="submit" class="btn" id="submitBtn">Register & Proceed</button>
         </form>
 
         <div class="links">
@@ -118,10 +118,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Integration -->
+    <!-- Firebase Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-analytics.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
@@ -134,11 +134,9 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-    </script>
+        const db = getFirestore(app);
 
-    <script>
-        function toggleDesignationFields() {
+        window.toggleDesignationFields = function() {
             const designation = document.getElementById('designation').value;
             const ucSelect = document.getElementById('unionCouncil');
             const centerSelect = document.getElementById('epiCenter');
@@ -156,44 +154,66 @@
                 ucSelect.required = true;
                 centerSelect.required = true;
             }
-        }
+        };
 
-        function handleRegister(event) {
-            event.preventDefault();
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Registering...';
 
-            const fullName = document.getElementById('fullName').value;
+            const fullName = document.getElementById('fullName').value.trim();
             const designation = document.getElementById('designation').value;
-            const cnic = document.getElementById('cnic').value;
-            const mobile = document.getElementById('mobile').value;
+            const cnic = document.getElementById('cnic').value.trim();
+            const mobile = document.getElementById('mobile').value.trim();
             const district = document.getElementById('district').value;
             const taluka = document.getElementById('taluka').value;
-            
-            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
-            
-            if (users.some(u => u.cnic === cnic)) {
-                alert('An account with this CNIC already exists!');
-                return;
-            }
-
             const unionCouncil = designation === 'Admin' ? 'Taluka Controller (All)' : document.getElementById('unionCouncil').value;
             const epiCenter = designation === 'Admin' ? 'Taluka Office Naushahro Feroze' : document.getElementById('epiCenter').value;
             const password = document.getElementById('regPassword').value;
 
-            const newUser = { fullName, designation, cnic, mobile, district, taluka, unionCouncil, epiCenter, password };
-            
-            users.push(newUser);
-            
-            localStorage.setItem('epi_users', JSON.stringify(users));
-            localStorage.setItem('currentUser', JSON.stringify(newUser));
+            try {
+                // Check if Admin already exists in Firestore
+                if (designation === 'Admin') {
+                    const adminQuery = query(collection(db, "users"), where("designation", "==", "Admin"));
+                    const adminSnap = await getDocs(adminQuery);
+                    if (!adminSnap.empty) {
+                        alert('An Administrator account already exists in database!');
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = 'Register & Proceed';
+                        return;
+                    }
+                }
 
-            alert('Registration Successful!');
+                // Check if CNIC already exists
+                const userRef = doc(db, "users", cnic);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    alert('An account with this CNIC already exists!');
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Register & Proceed';
+                    return;
+                }
 
-            if (designation === 'Admin') {
-                window.location.href = 'admin.html';
-            } else {
-                window.location.href = 'vaccinator.html';
+                // Save user to Firestore
+                const userData = { fullName, designation, cnic, mobile, district, taluka, unionCouncil, epiCenter, password };
+                await setDoc(userRef, userData);
+
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                alert('Registration Successful!');
+
+                if (designation === 'Admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'vaccinator.html';
+                }
+            } catch (error) {
+                console.error("Error writing document: ", error);
+                alert('Error during registration: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Register & Proceed';
             }
-        }
+        });
     </script>
 </body>
 </html>
