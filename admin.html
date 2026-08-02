@@ -291,53 +291,86 @@
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDK & Script Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
+            authDomain: "epi-portal.firebaseapp.com",
+            projectId: "epi-portal",
+            storageBucket: "epi-portal.firebasestorage.app",
+            messagingSenderId: "513980526499",
+            appId: "1:513980526499:web:5b3a1cfe761f93a0767416",
+            measurementId: "G-5JQZ3W8WWK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminData();
             loadLeaveRequests();
             loadComplianceReports();
         });
 
-        // Load Registered Users
-        function loadAdminData() {
-            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+        // Load Registered Users from Firebase Firestore
+        window.loadAdminData = async function() {
             const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#666;">Loading live user records...</td></tr>';
 
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#666;">No registered users found yet.</td></tr>';
-                return;
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                tbody.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#666;">No registered users found yet.</td></tr>';
+                    return;
+                }
+
+                querySnapshot.forEach((documentSnapshot) => {
+                    const u = documentSnapshot.data();
+                    const cnicKey = documentSnapshot.id; // Document ID is CNIC
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${u.fullName || 'N/A'}</td>
+                        <td><b>${u.designation || 'N/A'}</b></td>
+                        <td>${u.cnic || cnicKey}</td>
+                        <td>${u.mobile || 'N/A'}</td>
+                        <td>${u.district || 'N/A'}</td>
+                        <td>${u.taluka || 'N/A'}</td>
+                        <td>${u.unionCouncil || 'N/A'}</td>
+                        <td>${u.epiCenter || 'N/A'}</td>
+                        <td class="no-print">
+                            <button class="btn-action btn-delete" onclick="deleteUser('${cnicKey}')">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading users: ", error);
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:red;">Failed to load users from cloud database.</td></tr>';
             }
+        };
 
-            users.forEach((u, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${u.fullName}</td>
-                    <td><b>${u.designation}</b></td>
-                    <td>${u.cnic}</td>
-                    <td>${u.mobile}</td>
-                    <td>${u.district}</td>
-                    <td>${u.taluka}</td>
-                    <td>${u.unionCouncil}</td>
-                    <td>${u.epiCenter}</td>
-                    <td class="no-print">
-                        <button class="btn-action btn-delete" onclick="deleteUser(${index})">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Delete User
-        function deleteUser(index) {
-            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+        // Delete User from Firebase Firestore
+        window.deleteUser = async function(cnicKey) {
             if(confirm("Are you sure you want to permanently delete this user account and associated profile data?")) {
-                users.splice(index, 1);
-                localStorage.setItem('epi_users', JSON.stringify(users));
-                loadAdminData();
+                try {
+                    await deleteDoc(doc(db, "users", cnicKey));
+                    alert("User successfully deleted from database!");
+                    loadAdminData();
+                } catch (error) {
+                    console.error("Delete Error: ", error);
+                    alert("Failed to delete user: " + error.message);
+                }
             }
-        }
+        };
+    </script>
 
+    <script>
         // Print Registered Users Directory Cleanly
         function printUsersDirectory() {
             document.body.classList.remove('modal-open');
@@ -356,7 +389,6 @@
             let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
             let mappedReports = reports.map((rep, idx) => ({ ...rep, storageIndex: idx }));
 
-            // Sort: New (Unread) reports on top, Viewed reports at bottom
             mappedReports.sort((a, b) => {
                 let viewedA = a.isViewedTalukaAdmin ? 1 : 0;
                 let viewedB = b.isViewedTalukaAdmin ? 1 : 0;
@@ -366,7 +398,6 @@
             renderComplianceTable(mappedReports);
         }
 
-        // Render Compliance Table Line List
         function renderComplianceTable(reports) {
             const tbody = document.getElementById('complianceTableBody');
             tbody.innerHTML = '';
@@ -395,7 +426,6 @@
             });
         }
 
-        // Filter Compliance Reports by Name, UC, Center & Date Range
         function filterComplianceReports() {
             let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
             let mappedReports = reports.map((rep, idx) => ({ ...rep, storageIndex: idx }));
@@ -427,7 +457,6 @@
             renderComplianceTable(filtered);
         }
 
-        // Reset Compliance Filters
         function resetComplianceFilters() {
             document.getElementById('searchCompName').value = '';
             document.getElementById('searchCompUC').value = '';
@@ -437,7 +466,6 @@
             loadComplianceReports();
         }
 
-        // Image Download & Preview Function
         function downloadImage(imgSrc) {
             if(!imgSrc) return;
             let a = document.createElement('a');
@@ -448,7 +476,6 @@
             document.body.removeChild(a);
         }
 
-        // Open Modal to View Complete Report Form and mark as Viewed
         function openReportModal(index) {
             let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
             let rep = reports[index];
@@ -506,10 +533,9 @@
 
         function closeReportModal() {
             document.getElementById('reportModal').style.display = 'none';
-            loadComplianceReports(); // Modal band hote hi line list update ho jayegi aur opened report gray ho jayegi
+            loadComplianceReports();
         }
 
-        // Load and Sort Leave Requests
         function loadLeaveRequests() {
             let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
             let mappedLeaves = leaves.map((l, idx) => ({ ...l, storageIndex: idx }));
@@ -526,7 +552,6 @@
             renderLeaveTable(mappedLeaves);
         }
 
-        // Render Leave Table Data
         function renderLeaveTable(leaves) {
             const tbody = document.getElementById('leaveTableBody');
             tbody.innerHTML = '';
@@ -570,7 +595,6 @@
             });
         }
 
-        // Filter Leaves
         function filterLeaves() {
             let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
             let mappedLeaves = leaves.map((l, idx) => ({ ...l, storageIndex: idx }));
@@ -604,7 +628,6 @@
             renderLeaveTable(filtered);
         }
 
-        // Reset Leave Filters
         function resetLeaveFilters() {
             document.getElementById('searchName').value = '';
             document.getElementById('searchUC').value = '';
@@ -614,7 +637,6 @@
             loadLeaveRequests();
         }
 
-        // Update Leave Status
         function updateLeaveStatus(storageIndex, status) {
             let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
             if(leaves[storageIndex]) {
@@ -624,7 +646,6 @@
             }
         }
 
-        // View Proof Modal
         function viewProof(imgSrc) {
             if(!imgSrc || imgSrc === 'undefined') {
                 alert("No leave image attached to this application.");
@@ -638,7 +659,6 @@
             document.getElementById('proofModal').style.display = 'none';
         }
 
-        // Section Switcher
         function showSection(sectionId) {
             document.getElementById('overviewSection').style.display = 'none';
             document.getElementById('usersSection').style.display = 'none';
