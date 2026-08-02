@@ -131,9 +131,13 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
     <script>
         window.onload = function() {
-            // Set today's date as default in application date field
             let today = new Date().toISOString().split('T')[0];
             document.getElementById('applicationDate').value = today;
 
@@ -154,11 +158,9 @@
 
             let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
             
-            // Using fixed values from current logged-in user session for absolute security and accuracy
             const staffName = currentUser.fullName || document.getElementById('staffName').value;
             const unionCouncil = currentUser.unionCouncil || document.getElementById('unionCouncil').value;
             const epiCenter = currentUser.epiCenter || document.getElementById('epiCenter').value;
-            
             const applicationDate = document.getElementById('applicationDate').value;
             const reason = document.getElementById('reason').value;
             const fileInput = document.getElementById('proofImage');
@@ -168,61 +170,77 @@
                 reader.readAsDataURL(fileInput.files[0]);
                 reader.onload = function (e) {
                     const proofImage = e.target.result;
-                    saveLeaveData({ staffName, unionCouncil, epiCenter, fromDate: applicationDate, toDate: applicationDate, reason, proofImage, status: 'Pending' });
+                    saveLeaveData({ 
+                        staffName, 
+                        unionCouncil, 
+                        epiCenter, 
+                        fromDate: applicationDate, 
+                        toDate: applicationDate, 
+                        reason, 
+                        proofImage, 
+                        status: 'Pending',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
                 };
             }
         }
 
-        function saveLeaveData(newLeave) {
-            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-            leaves.push(newLeave);
-            localStorage.setItem('epi_leave_requests', JSON.stringify(leaves));
+        async function saveLeaveData(newLeave) {
+            try {
+                // Save to Firebase Firestore Collection 'epi_leave_requests'
+                await db.collection('epi_leave_requests').add(newLeave);
+                alert('Leave application submitted successfully to Admin via Firebase!');
+                
+                document.getElementById('reason').value = '';
+                document.getElementById('proofImage').value = '';
+                let today = new Date().toISOString().split('T')[0];
+                document.getElementById('applicationDate').value = today;
 
-            alert('Leave application submitted successfully! Sent to Admin.');
-            
-            // Reset only reason and file input, keep fixed fields intact
-            document.getElementById('reason').value = '';
-            document.getElementById('proofImage').value = '';
-            
-            let today = new Date().toISOString().split('T')[0];
-            document.getElementById('applicationDate').value = today;
-
-            loadLineList();
+                loadLineList();
+            } catch (error) {
+                console.error("Error submitting leave:", error);
+                alert("Failed to submit leave. Check your network.");
+            }
         }
 
-        function loadLineList() {
-            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+        async function loadLineList() {
             let currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const tbody = document.getElementById('lineListTable');
             tbody.innerHTML = '';
 
-            let userLeaves = leaves;
-            if (currentUser && currentUser.fullName) {
-                userLeaves = leaves.filter(l => l.staffName.toLowerCase() === currentUser.fullName.toLowerCase());
+            if (!currentUser || !currentUser.fullName) return;
+
+            try {
+                let snapshot = await db.collection('epi_leave_requests')
+                    .where('staffName', '==', currentUser.fullName)
+                    .get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#666;">No leave applications found.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    let l = doc.data();
+                    let statusClass = 'badge-pending';
+                    let statusText = l.status || 'Pending';
+                    if (statusText === 'Approved') statusClass = 'badge-approved';
+                    if (statusText === 'Rejected') statusClass = 'badge-rejected';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${l.fromDate}</td>
+                        <td>${l.unionCouncil}</td>
+                        <td>${l.epiCenter}</td>
+                        <td>${l.reason}</td>
+                        <td><button class="btn-proof" onclick="viewImage('${l.proofImage}')">View</button></td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading line list:", error);
             }
-
-            if (userLeaves.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#666;">No leave applications found.</td></tr>';
-                return;
-            }
-
-            userLeaves.forEach(l => {
-                let statusClass = 'badge-pending';
-                let statusText = l.status || 'Pending';
-                if (statusText === 'Approved') statusClass = 'badge-approved';
-                if (statusText === 'Rejected') statusClass = 'badge-rejected';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${l.fromDate}</td>
-                    <td>${l.unionCouncil}</td>
-                    <td>${l.epiCenter}</td>
-                    <td>${l.reason}</td>
-                    <td><button class="btn-proof" onclick="viewImage('${l.proofImage}')">View</button></td>
-                    <td><span class="${statusClass}">${statusText}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
         }
 
         function viewImage(imgBase64) {
