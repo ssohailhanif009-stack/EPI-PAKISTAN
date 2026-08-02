@@ -256,11 +256,49 @@
             });
         });
 
+        // Image compression function taake size 1MB se kam rahe (Firestore limit fix)
+        const readFileAsDataURL = (file) => {
+            return new Promise((resolve) => {
+                if (!file) { resolve(''); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
         document.getElementById('reportingForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Submitting...';
+            submitBtn.innerText = 'Compressing & Submitting...';
 
             let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
             
@@ -277,15 +315,6 @@
                 submitBtn.innerText = 'Submit Daily Report to Admin';
                 return;
             }
-
-            const readFileAsDataURL = (file) => {
-                return new Promise((resolve) => {
-                    if (!file) { resolve(''); return; }
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            };
 
             let tempImg = '';
             let panadolImg = '';
@@ -339,10 +368,8 @@
             };
 
             try {
-                // Save to Firestore
                 await addDoc(collection(db, 'epi_daily_reports'), reportData);
 
-                // Save to LocalStorage for Admin Dashboard Sync
                 let localReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
                 localReports.push(reportData);
                 localStorage.setItem('epi_daily_reports', JSON.stringify(localReports));
@@ -351,7 +378,7 @@
                 location.reload();
             } catch (error) {
                 console.error("Error saving report: ", error);
-                alert("Failed to submit report: " + error.message);
+                alert("Failed to submit report: "  + error.message);
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Submit Daily Report to Admin';
             }
