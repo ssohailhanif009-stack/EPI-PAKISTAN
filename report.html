@@ -189,7 +189,7 @@
                     <div class="form-group"><input type="text" class="lhw-name" placeholder="LHW Name 2"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><input type="text" class="lhw-name" placeholder="LHWName 3"></div>
+                    <div class="form-group"><input type="text" class="lhw-name" placeholder="LHW Name 3"></div>
                     <div class="form-group"><input type="text" class="lhw-name" placeholder="LHW Name 4"></div>
                 </div>
             </div>
@@ -201,7 +201,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script> <!-- Yahan aapki firebase config file connect hogi -->
+    <script src="firebase-config.js"></script>
 
     <script>
         window.onload = function() {
@@ -215,14 +215,12 @@
                 if(currentUser.unionCouncil) document.getElementById('unionCouncil').value = currentUser.unionCouncil;
                 if(currentUser.epiCenter) document.getElementById('epiCenter').value = currentUser.epiCenter;
 
-                // Check if user has already submitted a report for today from Firebase/Local
                 checkTodaySubmission(currentUser.fullName, today);
             } else {
                 alert("No active session found. Please login first.");
                 window.location.href = "index.html";
             }
 
-            // Temp image timestamp capture trigger
             document.getElementById('tempRecordImg').addEventListener('change', function() {
                 if(this.files && this.files[0]) {
                     let now = new Date().toLocaleTimeString();
@@ -353,7 +351,6 @@
                 };
 
                 try {
-                    // Save to Firebase Firestore Collection 'epi_daily_reports'
                     await db.collection('epi_daily_reports').add(reportData);
                     alert('Daily Administrative Report successfully submitted to Admin via Firebase!');
                     location.reload();
