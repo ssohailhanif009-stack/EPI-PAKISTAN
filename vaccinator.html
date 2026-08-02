@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaccinator Dashboard - EPI Pakistan</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        
+        body { 
+            /* Professional Medical Background Image with a subtle dark overlay for readability */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333; 
+            display: flex; 
+            min-height: 100vh; 
+        }
+
+        .sidebar { 
+            width: 260px; 
+            background-color: rgba(26, 77, 46, 0.95); 
+            color: white; 
+            padding: 20px; 
+            backdrop-filter: blur(5px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-brand img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-brand h2 { 
+            color: white; 
+            font-size: 16px; 
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar ul { list-style: none; }
+        .sidebar ul li { margin-bottom: 12px; }
+        
+        .sidebar ul li a { 
+            color: #e8f5e9; 
+            text-decoration: none; 
+            display: block; 
+            padding: 10px 12px; 
+            border-radius: 4px; 
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a:hover, .sidebar ul li a.active { 
+            background: rgba(255, 255, 255, 0.15); 
+            color: white; 
+            padding-left: 15px;
+        }
+
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 15px 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            margin-bottom: 25px; 
+            backdrop-filter: blur(5px);
+        }
+
+        header h2 {
+            color: #1b4d3e;
+            font-size: 22px;
+        }
+
+        .user-badge { 
+            background: #e8f5e9; 
+            color: #2e7d32; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 12px; 
+            border: 1px solid #c8e6c9;
+        }
+
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            backdrop-filter: blur(5px);
+            margin-bottom: 25px;
+        }
+
+        .card h3 {
+            color: #1b4d3e;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        /* Action Buttons Grid Styling */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            background-color: #1b4d3e;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.2s;
+            display: block;
+        }
+
+        .action-btn:hover {
+            background-color: #14382c;
+            transform: translateY(-2px);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="logo.png" alt="EPI Logo">
+            <h2>Vaccinator Portal</h2>
+        </div>
+        <ul>
+            <li><a href="vaccinator.html" class="active">My Dashboard</a></li>
+            <li><a href="leave.html">Leave Approval</a></li>
+            <!-- Reporting Form link updated to point to report.html -->
+            <li><a href="report.html">Reporting Form</a></li>
+            <li><a href="index.html" onclick="localStorage.removeItem('currentUser')">Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h2>Vaccinator Control Panel</h2>
+            <span id="staffBadge" class="user-badge">Loading Center...</span>
+        </header>
+
+        <div class="card">
+            <h3>Quick Actions</h3>
+            <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Official operational links for daily management.</p>
+            <div class="action-grid">
+                <a href="leave.html" class="action-btn">Leave Approval / Request</a>
+                <!-- Quick action button updated to point to report.html -->
+                <a href="report.html" class="action-btn">Reporting Form</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Assigned Staff Profile & Bio-Data</h3>
+            <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Your official government record status: Verified & Active.</p>
+            <div id="profileInfoContent" style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #1b4d3e;">
+                Loading profile records...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('staffBadge').innerText = user.epiCenter;
+            document.getElementById('profileInfoContent').innerHTML = `
+                <p style="margin-bottom:8px;"><strong>Full Name:</strong> ${user.fullName}</p>
+                <p style="margin-bottom:8px;"><strong>Designation:</strong> ${user.designation}</p>
+                <p style="margin-bottom:8px;"><strong>CNIC No:</strong> ${user.cnic}</p>
+                <p style="margin-bottom:8px;"><strong>Mobile No:</strong> ${user.mobile}</p>
+                <p style="margin-bottom:8px;"><strong>District:</strong> ${user.district}</p>
+                <p style="margin-bottom:8px;"><strong>Taluka:</strong> ${user.taluka}</p>
+                <p style="margin-bottom:8px;"><strong>Union Council:</strong> ${user.unionCouncil}</p>
+                <p style="margin-bottom:0;"><strong>Assigned EPI Center:</strong> ${user.epiCenter}</p>
+            `;
+        });
+    </script>
+</body>
+</html>

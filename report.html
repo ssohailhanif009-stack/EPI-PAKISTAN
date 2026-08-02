@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Vaccinator Administrative Reporting Dashboard - EPI Pakistan</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .card { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 900px; margin-bottom: 25px; backdrop-filter: blur(5px); }
+        h2 { color: #1b4d3e; margin-bottom: 5px; font-size: 22px; }
+        .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #1b4d3e; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #fafafa; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #1b4d3e; background: #fff; }
+        input[readonly], select:disabled { background-color: #e9ecef; color: #495057; cursor: not-allowed; border-color: #ced4da; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background-color: #1b4d3e; color: white; font-size: 15px; margin-top: 10px; transition: background 0.2s; }
+        .btn:hover { background-color: #14382c; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #fff; background: #1b4d3e; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; }
+        .section-title { font-size: 15px; font-weight: bold; color: #1b4d3e; border-bottom: 2px solid #1b4d3e; padding-bottom: 5px; margin: 20px 0 15px 0; }
+        .disabled-section { opacity: 0.5; pointer-events: none; }
+        
+        /* Print Styles - No Images */
+        @media print {
+            body { background: white !important; color: black !important; padding: 0; }
+            .card { box-shadow: none; background: white !important; padding: 0; max-width: 100%; }
+            .back-link, .btn, input[type="file"], .no-print { display: none !important; }
+            input, select { border: none; background: transparent; font-size: 13px; padding: 2px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <a href="vaccinator.html" class="back-link no-print">&larr; Back to Dashboard</a>
+        <h2>Executive Vaccinator Administrative Reporting Form</h2>
+        <p class="subtitle">EPI Civil Hospital Naushahro Feroze</p>
+
+        <!-- Date Specific Download Section for User -->
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; margin-bottom: 20px;" class="no-print">
+            <label>Download Report PDF for Any Specific Date:</label>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <input type="date" id="downloadDateInput" style="background: white;">
+                <button type="button" class="btn" style="margin-top:0; width: auto; padding: 8px 20px;" onclick="downloadPDFByDate()">Download PDF</button>
+            </div>
+        </div>
+
+        <form id="reportingForm" onsubmit="submitReport(event)">
+            
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Date</label>
+                    <input type="date" id="reportDate" required readonly>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Name (Fixed)</label>
+                    <input type="text" id="staffName" readonly required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>District (Fixed)</label>
+                    <input type="text" id="district" value="Naushahro Feroze" readonly required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Taluka (Fixed)</label>
+                    <input type="text" id="taluka" value="Naushahro Feroze" readonly required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Union Council</label>
+                    <select id="unionCouncil" disabled required>
+                        <option value="">Select Union Council</option>
+                        <option value="Abran">Abran</option>
+                        <option value="Bhanbhri">Bhanbhri</option>
+                        <option value="Dageja">Dageja</option>
+                        <option value="Darya Khan Mari">Darya Khan Mari</option>
+                        <option value="Koor Hassan">Koor Hassan</option>
+                        <option value="Mithiani">Mithiani</option>
+                        <option value="Masurji-Waah">Masurji-Waah</option>
+                        <option value="Naushahro Feroze">Naushahro Feroze</option>
+                        <option value="Noorpur">Noorpur</option>
+                        <option value="Padidan">Padidan</option>
+                        <option value="Phull">Phull</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Assigned EPI Center</label>
+                    <select id="epiCenter" disabled required>
+                        <option value="">Select EPI Center</option>
+                        <option value="GD Abran">GD Abran</option>
+                        <option value="BHU Kamil Rajper">BHU Kamil Rajper</option>
+                        <option value="BHU Mirapur">BHU Mirapur</option>
+                        <option value="BHU Dageja">BHU Dageja</option>
+                        <option value="RHC Darya Khan Mari">RHC Darya Khan Mari</option>
+                        <option value="GD Attal Bohiyo">GD Attal Bohiyo</option>
+                        <option value="RHC Mithiani">RHC Mithiani</option>
+                        <option value="BHU Masurji Waah">BHU Masurji Waah</option>
+                        <option value="GD Jahan Khan Jatoi">GD Jahan Khan Jatoi</option>
+                        <option value="Civil Hospital Naushahro Feroze">Civil Hospital Naushahro Feroze</option>
+                        <option value="BHU Baig Muhammad Pahnwar">BHU Baig Muhammad Pahnwar</option>
+                        <option value="BHU Pinjal Faqeer">BHU Pinjal Faqeer</option>
+                        <option value="RHC Padidan">RHC Padidan</option>
+                        <option value="BHU Phull">BHU Phull</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Attendance Status</label>
+                    <select id="attendance" onchange="handleAttendanceChange()" required>
+                        <option value="">Select Attendance</option>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Leave">Leave</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Automatic Attendance Time</label>
+                    <input type="text" id="attendanceTime" readonly placeholder="Will record on Present">
+                </div>
+            </div>
+
+            <!-- Dynamic Container that disables when Absent or Leave -->
+            <div id="reportFieldsContainer">
+                <div class="section-title">Operational Data & Stock Records</div>
+
+                <div class="form-group">
+                    <label>Temperature Record Sheet (Upload Image & Auto Time)</label>
+                    <input type="file" id="tempRecordImg" accept="image/*" capture="environment">
+                    <input type="text" id="tempRecordTime" readonly style="margin-top:5px;" placeholder="Upload timestamp">
+                </div>
+
+                <div class="form-group">
+                    <label>Vaccine Stock Book (Compulsory 4 Pictures Upload)</label>
+                    <div class="form-row" style="margin-bottom: 5px;">
+                        <input type="file" class="vaccine-img" accept="image/*" capture="environment">
+                        <input type="file" class="vaccine-img" accept="image/*" capture="environment">
+                    </div>
+                    <div class="form-row">
+                        <input type="file" class="vaccine-img" accept="image/*" capture="environment">
+                        <input type="file" class="vaccine-img" accept="image/*" capture="environment">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Panadol-Drops Stock Book (Upload Image)</label>
+                    <input type="file" id="panadolImg" accept="image/*" capture="environment">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Session Type</label>
+                        <select id="sessionType">
+                            <option value="Fix Site">Fix Site</option>
+                            <option value="Outreach Session">Outreach Session</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Session Image (Upload)</label>
+                        <input type="file" id="sessionImg" accept="image/*" capture="environment">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Assigned Today Target</label>
+                    <input type="number" id="todayTarget" placeholder="Enter total target">
+                </div>
+
+                <div class="section-title">Assigned LHWs (Up to 4 Names)</div>
+                <div class="form-row">
+                    <div class="form-group"><input type="text" class="lhw-name" placeholder="LHW Name 1"></div>
+                    <div class="form-group"><input type="text" class="lhw-name" placeholder="LHW Name 2"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><input type="text" class="lhw-name" placeholder="LHWName 3"></div>
+                    <div class="form-group"><input type="text" class="lhw-name" placeholder="LHW Name 4"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn no-print" id="submitBtn">Submit Daily Report to Admin</button>
+        </form>
+    </div>
+
+    <script>
+        window.onload = function() {
+            let today = new Date().toISOString().split('T')[0];
+            document.getElementById('reportDate').value = today;
+            document.getElementById('downloadDateInput').value = today;
+
+            let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                if(document.getElementById('staffName')) document.getElementById('staffName').value = currentUser.fullName || '';
+                if(currentUser.unionCouncil) document.getElementById('unionCouncil').value = currentUser.unionCouncil;
+                if(currentUser.epiCenter) document.getElementById('epiCenter').value = currentUser.epiCenter;
+
+                // Check if user has already submitted a report for today
+                checkTodaySubmission(currentUser.fullName, today);
+            } else {
+                alert("No active session found. Please login first.");
+                window.location.href = "index.html";
+            }
+
+            // Temp image timestamp capture trigger
+            document.getElementById('tempRecordImg').addEventListener('change', function() {
+                if(this.files && this.files[0]) {
+                    let now = new Date().toLocaleTimeString();
+                    document.getElementById('tempRecordTime').value = "Uploaded at: " + now;
+                }
+            });
+        };
+
+        function checkTodaySubmission(staffName, todayDate) {
+            let allReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+            let alreadySubmitted = allReports.some(r => r.date === todayDate && r.staffName.toLowerCase() === staffName.toLowerCase());
+
+            if (alreadySubmitted) {
+                let form = document.getElementById('reportingForm');
+                // Disable all inputs and select fields inside the form
+                let elements = form.elements;
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].disabled = true;
+                }
+                
+                // Show notice banner
+                let notice = document.createElement('div');
+                notice.style.cssText = "background: #ffebee; color: #c62828; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; text-align: center;";
+                notice.innerHTML = "⚠️ You have already submitted your daily report for today. Only one submission per day is allowed.";
+                form.prepend(notice);
+            }
+        }
+
+        function handleAttendanceChange() {
+            let att = document.getElementById('attendance').value;
+            let container = document.getElementById('reportFieldsContainer');
+            let timeField = document.getElementById('attendanceTime');
+
+            if (att === 'Present') {
+                container.classList.remove('disabled-section');
+                let now = new Date().toLocaleTimeString();
+                timeField.value = "Marked Present at: " + now;
+            } else if (att === 'Absent' || att === 'Leave') {
+                container.classList.add('disabled-section');
+                timeField.value = "Marked " + att;
+                
+                if (att === 'Leave') {
+                    alert("Notice: It is mandatory to get leave approval from the TSV (Taluka Superintendent of Vaccination).");
+                }
+            } else {
+                container.classList.remove('disabled-section');
+                timeField.value = "";
+            }
+        }
+
+        function submitReport(event) {
+            event.preventDefault();
+            let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+            
+            const reportDate = document.getElementById('reportDate').value;
+            const staffName = currentUser.fullName || document.getElementById('staffName').value;
+            
+            // Double check validation for single submission per day
+            let allReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+            let alreadySubmitted = allReports.some(r => r.date === reportDate && r.staffName.toLowerCase() === staffName.toLowerCase());
+            
+            if (alreadySubmitted) {
+                alert('Restriction: You have already submitted a report for today. Only one submission per day is permitted.');
+                location.reload();
+                return;
+            }
+
+            const unionCouncil = currentUser.unionCouncil || document.getElementById('unionCouncil').value;
+            const epiCenter = currentUser.epiCenter || document.getElementById('epiCenter').value;
+            const attendance = document.getElementById('attendance').value;
+            const attendanceTime = document.getElementById('attendanceTime').value;
+
+            if(!attendance) {
+                alert('Please select attendance status.');
+                return;
+            }
+
+            // Helper to read files as Base64
+            const readFileAsDataURL = (file) => {
+                return new Promise((resolve) => {
+                    if (!file) { resolve(''); return; }
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            async function processAndSave() {
+                let tempImg = '';
+                let panadolImg = '';
+                let sessionImg = '';
+                let vaccineImgs = [];
+
+                if (attendance === 'Present') {
+                    tempImg = await readFileAsDataURL(document.getElementById('tempRecordImg').files[0]);
+                    panadolImg = await readFileAsDataURL(document.getElementById('panadolImg').files[0]);
+                    sessionImg = await readFileAsDataURL(document.getElementById('sessionImg').files[0]);
+
+                    let vaccineFileNodes = document.querySelectorAll('.vaccine-img');
+                    for(let fileInput of vaccineFileNodes) {
+                        if(fileInput.files[0]) {
+                            let imgData = await readFileAsDataURL(fileInput.files[0]);
+                            vaccineImgs.push(imgData);
+                        }
+                    }
+
+                    if(vaccineImgs.length < 4) {
+                        alert('Compulsory requirement: Please upload all 4 pictures for Vaccine Stock Book.');
+                        return;
+                    }
+                }
+
+                let lhwNames = [];
+                document.querySelectorAll('.lhw-name').forEach(input => {
+                    if(input.value.trim() !== '') lhwNames.push(input.value.trim());
+                });
+
+                let reportData = {
+                    date: reportDate,
+                    staffName: staffName,
+                    district: 'Naushahro Feroze',
+                    taluka: 'Naushahro Feroze',
+                    unionCouncil: unionCouncil,
+                    epiCenter: epiCenter,
+                    attendance: attendance,
+                    attendanceTime: attendanceTime,
+                    tempRecordTime: document.getElementById('tempRecordTime').value,
+                    tempImg: tempImg,
+                    vaccineImgs: vaccineImgs,
+                    panadolImg: panadolImg,
+                    sessionType: document.getElementById('sessionType').value,
+                    sessionImg: sessionImg,
+                    todayTarget: document.getElementById('todayTarget').value,
+                    lhwNames: lhwNames
+                };
+
+                let updatedReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+                // Re-verify before final push
+                let checkAgain = updatedReports.some(r => r.date === reportDate && r.staffName.toLowerCase() === staffName.toLowerCase());
+                if (checkAgain) {
+                    alert('Restriction: Report for today has already been registered.');
+                    location.reload();
+                    return;
+                }
+
+                updatedReports.push(reportData);
+                localStorage.setItem('epi_daily_reports', JSON.stringify(updatedReports));
+
+                alert('Daily Administrative Report successfully submitted to Admin!');
+                location.reload();
+            }
+
+            processAndSave();
+        }
+
+        function downloadPDFByDate() {
+            let targetDate = document.getElementById('downloadDateInput').value;
+            let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+            let allReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+
+            let foundReport = allReports.find(r => r.date === targetDate && r.staffName.toLowerCase() === currentUser.fullName.toLowerCase());
+
+            if (!foundReport) {
+                alert('No report found submitted for date: ' + targetDate);
+                return;
+            }
+
+            // Populate form fields temporarily with that date's data to print cleanly without pictures
+            document.getElementById('reportDate').value = foundReport.date;
+            document.getElementById('attendance').value = foundReport.attendance;
+            document.getElementById('attendanceTime').value = foundReport.attendanceTime;
+            document.getElementById('sessionType').value = foundReport.sessionType || '';
+            document.getElementById('todayTarget').value = foundReport.todayTarget || '';
+            
+            handleAttendanceChange();
+
+            // Trigger browser print dialog (User can save as PDF without pictures due to print CSS media query)
+            window.print();
+        }
+    </script>
+</body>
+</html>

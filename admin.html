@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Expanded Programme on Immunization (EPI) Sindh</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { 
+            background: linear-gradient(rgba(244, 247, 246, 0.88), rgba(244, 247, 246, 0.88)), 
+                        url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1500&q=80');
+            background-size: cover;
+            background-position: center;
+            color: #333; 
+            display: flex; 
+            min-height: 100vh; 
+        }
+        .sidebar { width: 270px; background-color: #1b4d3e; color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
+        .sidebar-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: white; padding: 2px; border: 2px solid #b2dfdb; }
+        .sidebar h2 { color: white; font-size: 15px; line-height: 1.2; }
+        .sidebar ul { list-style: none; }
+        .sidebar ul li { margin-bottom: 12px; }
+        .sidebar ul li a { color: #b2dfdb; text-decoration: none; display: block; padding: 10px; border-radius: 4px; transition: 0.2s; font-size: 14px; }
+        .sidebar ul li a:hover { background: rgba(255,255,255,0.15); color: white; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #1b4d3e; }
+        .user-badge { background: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; }
+        .card { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .table-responsive { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        table th, table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 13px; }
+        table th { background: #f8f9fa; color: #1b4d3e; font-weight: 600; }
+        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-right: 4px; }
+        .btn-download { background-color: #2e7d32; color: white; }
+        .btn-delete { background-color: #c62828; color: white; }
+        .btn-approve { background-color: #2e7d32; color: white; }
+        .btn-reject { background-color: #d32f2f; color: white; }
+        .btn-proof { background-color: #0288d1; color: white; }
+        .btn-action:hover { opacity: 0.85; }
+        
+        /* Filter Controls Styling */
+        .filter-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e0e0e0; }
+        .filter-container input, .filter-container select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; flex: 1; min-width: 150px; }
+        .filter-container button { padding: 8px 15px; background: #1b4d3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .filter-container button:hover { background: #14382c; }
+
+        /* Row Gray Styling for Processed Leaves & Viewed Compliance Reports */
+        .row-processed { background-color: #e9ecef !important; color: #6c757d; }
+        .row-processed td { color: #6c757d !important; }
+
+        /* Modal Styling */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; overflow-y: auto; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; text-align: left; position: relative; }
+        .modal-content img { max-width: 100%; max-height: 250px; border-radius: 4px; margin-top: 5px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; }
+        .modal-content img:hover { opacity: 0.9; transform: scale(1.01); }
+        .close-btn { background: #333; color: white; border: none; padding: 8px 20px; margin-top: 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+
+        /* Print styles */
+        @media print {
+            body { background: white; display: block; }
+            .sidebar, header, .filter-container, .btn-action, .modal, .close-btn, .no-print { display: none !important; }
+            .main-content { padding: 0; overflow: visible; }
+            .card { box-shadow: none; border: none; padding: 0; margin: 0; }
+            body:not(.modal-open) #reportModal { display: none !important; }
+            body.modal-open #reportModal { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; z-index: 9999; }
+            body.modal-open .modal-content { max-width: 100% !important; width: 100% !important; max-height: none !important; box-shadow: none; padding: 0; }
+            table { border: 1px solid #ddd; width: 100%; }
+            table th, table td { border: 1px solid #ddd; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <img src="logo.png" alt="EPI Logo">
+            <h2>EPI PAKISTAN PORTAL<br><span style="font-size: 11px; color: #b2dfdb; font-weight: normal;">TalukaNaushahro Feroze</span></h2>
+        </div>
+        <ul>
+            <li><a href="#" onclick="showSection('overviewSection')">Dashboard Overview</a></li>
+            <li><a href="#" onclick="showSection('usersSection')">Registered User Records</a></li>
+            <li><a href="#" onclick="showSection('complianceSection')">Daily Compliance Logs</a></li>
+            <li><a href="#" onclick="showSection('leaveSection')">Official Leave Approval</a></li>
+            <li><a href="index.html" onclick="localStorage.removeItem('currentUser')">Secure Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h2>WELCOME, TSV TALUKA NAUSHAHRO FEROZE</h2>
+            <span class="user-badge">Mumtaz Ali Solangi</span>
+        </header>
+
+        <!-- Overview Section -->
+        <div id="overviewSection" class="card">
+            <h3 style="color: #1b4d3e; margin-bottom: 10px;">Executive System Status</h3>
+            <p style="color: #555; line-height: 1.5;">Welcome to the official Taluka Dashboard. Use the sidebar options to manage registered medical/vaccination staff bio-data records, review daily performance compliance, and evaluate official leave applications with verifiable attachments.</p>
+        </div>
+
+        <!-- Registered Users Section -->
+        <div id="usersSection" class="card" style="display:none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <h3 style="color: #1b4d3e;">Registered Field Staff & Vaccinator Bio-Data Directory</h3>
+                    <p style="color:#666; font-size:13px;">Live records synchronized from field registration portals.</p>
+                </div>
+                <button class="btn-action btn-download no-print" onclick="printUsersDirectory()">Print Bio-Data Preview</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Designation</th>
+                            <th>CNIC No.</th>
+                            <th>Mobile No.</th>
+                            <th>District</th>
+                            <th>Taluka</th>
+                            <th>Union Council</th>
+                            <th>Assigned EPI Center</th>
+                            <th class="no-print">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Populated by script -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Daily Compliance Section -->
+        <div id="complianceSection" class="card" style="display:none;">
+            <h3 style="color: #1b4d3e;">Daily Field Compliance Reports Line List</h3>
+            <p style="color:#666; font-size:13px; margin-bottom:10px;">New unread reports appear at the top. Click view to open details (viewed reports turn gray).</p>
+            
+            <!-- Filter & Search Bar -->
+            <div class="filter-container">
+                <input type="text" id="searchCompName" placeholder="Search Staff Name..." onkeyup="filterComplianceReports()">
+                
+                <select id="searchCompUC" onchange="filterComplianceReports()">
+                    <option value="">Filter Union Council</option>
+                    <option value="Abran">Abran</option>
+                    <option value="Bhanbhri">Bhanbhri</option>
+                    <option value="Dageja">Dageja</option>
+                    <option value="Darya Khan Mari">Darya Khan Mari</option>
+                    <option value="Koor Hassan">Koor Hassan</option>
+                    <option value="Mithiani">Mithiani</option>
+                    <option value="Masurji-Waah">Masurji-Waah</option>
+                    <option value="Naushahro Feroze">Naushahro Feroze</option>
+                    <option value="Noorpur">Noorpur</option>
+                    <option value="Padidan">Padidan</option>
+                    <option value="Phull">Phull</option>
+                </select>
+
+                <select id="searchCompCenter" onchange="filterComplianceReports()">
+                    <option value="">Filter EPI Center</option>
+                    <option value="GD Abran">GD Abran</option>
+                    <option value="BHU Kamil Rajper">BHU Kamil Rajper</option>
+                    <option value="BHU Mirapur">BHU Mirapur</option>
+                    <option value="BHU Dageja">BHU Dageja</option>
+                    <option value="RHC Darya Khan Mari">RHC Darya Khan Mari</option>
+                    <option value="GD Attal Bohiyo">GD Attal Bohiyo</option>
+                    <option value="RHC Mithiani">RHC Mithiani</option>
+                    <option value="BHU Masurji Waah">BHU Masurji Waah</option>
+                    <option value="GD Jahan Khan Jatoi">GD Jahan Khan Jatoi</option>
+                    <option value="Civil Hospital Naushahro Feroze">Civil Hospital Naushahro Feroze</option>
+                    <option value="BHU Baig Muhammad Pahnwar">BHU Baig Muhammad Pahnwar</option>
+                    <option value="BHU Pinjal Faqeer">BHU Pinjal Faqeer</option>
+                    <option value="RHC Padidan">RHC Padidan</option>
+                    <option value="BHU Phull">BHU Phull</option>
+                </select>
+
+                <input type="date" id="filterCompFromDate" onchange="filterComplianceReports()" title="From Date">
+                <input type="date" id="filterCompToDate" onchange="filterComplianceReports()" title="To Date">
+                <button onclick="resetComplianceFilters()">Reset Filters</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Staff Name</th>
+                            <th>Union Council</th>
+                            <th>EPI Center</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complianceTableBody">
+                        <!-- Populated dynamically via script -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Leave Approval Section -->
+        <div id="leaveSection" class="card" style="display:none;">
+            <h3 style="color: #1b4d3e; margin-bottom: 5px;">Official Staff Leave Applications & Approvals</h3>
+            <p style="color:#666; font-size:13px; margin-bottom:15px;">Review pending applications on top. Filter by Union Council, EPI Center, Date Range, or Name below.</p>
+            
+            <!-- Search & Filter Bar -->
+            <div class="filter-container">
+                <input type="text" id="searchName" placeholder="Search Staff Name..." onkeyup="filterLeaves()">
+                
+                <select id="searchUC" onchange="filterLeaves()">
+                    <option value="">Filter Union Council</option>
+                    <option value="Abran">Abran</option>
+                    <option value="Bhanbhri">Bhanbhri</option>
+                    <option value="Dageja">Dageja</option>
+                    <option value="Darya Khan Mari">Darya Khan Mari</option>
+                    <option value="Koor Hassan">Koor Hassan</option>
+                    <option value="Mithiani">Mithiani</option>
+                    <option value="Masurji-Waah">Masurji-Waah</option>
+                    <option value="Naushahro Feroze">Naushahro Feroze</option>
+                    <option value="Noorpur">Noorpur</option>
+                    <option value="Padidan">Padidan</option>
+                    <option value="Phull">Phull</option>
+                </select>
+
+                <select id="searchCenter" onchange="filterLeaves()">
+                    <option value="">Filter EPI Center</option>
+                    <option value="GD Abran">GD Abran</option>
+                    <option value="BHU Kamil Rajper">BHU Kamil Rajper</option>
+                    <option value="BHU Mirapur">BHU Mirapur</option>
+                    <option value="BHU Dageja">BHU Dageja</option>
+                    <option value="RHC Darya Khan Mari">RHC Darya Khan Mari</option>
+                    <option value="GD Attal Bohiyo">GD Attal Bohiyo</option>
+                    <option value="RHC Mithiani">RHC Mithiani</option>
+                    <option value="BHU Masurji Waah">BHU Masurji Waah</option>
+                    <option value="GD Jahan Khan Jatoi">GD Jahan Khan Jatoi</option>
+                    <option value="Civil Hospital Naushahro Feroze">Civil Hospital Naushahro Feroze</option>
+                    <option value="BHU Baig Muhammad Pahnwar">BHU Baig Muhammad Pahnwar</option>
+                    <option value="BHU Pinjal Faqeer">BHU Pinjal Faqeer</option>
+                    <option value="RHC Padidan">RHC Padidan</option>
+                    <option value="BHU Phull">BHU Phull</option>
+                </select>
+
+                <input type="date" id="filterFromDate" onchange="filterLeaves()" title="From Date">
+                <input type="date" id="filterToDate" onchange="filterLeaves()" title="To Date">
+                <button onclick="resetLeaveFilters()">Reset Filters</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vaccinator</th>
+                            <th>Union Council</th>
+                            <th>EPI Center</th>
+                            <th>Reason</th>
+                            <th>Leave Image</th>
+                            <th>Status</th>
+                            <th>Management Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaveTableBody">
+                        <!-- Populated by script -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal to View Proof Image -->
+    <div id="proofModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <h4 style="color: #1b4d3e;">Official Application Proof / Attachment</h4>
+            <img id="modalImg" src="" alt="Proof Image" onclick="downloadImage(this.src)">
+            <p style="font-size: 11px; color: #666; margin-top: 5px;">(Click image to download/preview)</p>
+            <br>
+            <button class="close-btn" onclick="closeProofModal()">Close Window</button>
+        </div>
+    </div>
+
+    <!-- Modal to View Complete Compliance Report Form -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1b4d3e; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="color: #1b4d3e;">Complete Compliance Report Details</h3>
+                <button class="btn-action btn-download" onclick="printReportModal()">Download PDF / Print Report</button>
+            </div>
+            
+            <div id="modalReportBody">
+                <!-- Detailed form contents injected dynamically -->
+            </div>
+
+            <button class="close-btn" onclick="closeReportModal()">Close Report</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAdminData();
+            loadLeaveRequests();
+            loadComplianceReports();
+        });
+
+        // Load Registered Users
+        function loadAdminData() {
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#666;">No registered users found yet.</td></tr>';
+                return;
+            }
+
+            users.forEach((u, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.fullName}</td>
+                    <td><b>${u.designation}</b></td>
+                    <td>${u.cnic}</td>
+                    <td>${u.mobile}</td>
+                    <td>${u.district}</td>
+                    <td>${u.taluka}</td>
+                    <td>${u.unionCouncil}</td>
+                    <td>${u.epiCenter}</td>
+                    <td class="no-print">
+                        <button class="btn-action btn-delete" onclick="deleteUser(${index})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Delete User
+        function deleteUser(index) {
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+            if(confirm("Are you sure you want to permanently delete this user account and associated profile data?")) {
+                users.splice(index, 1);
+                localStorage.setItem('epi_users', JSON.stringify(users));
+                loadAdminData();
+            }
+        }
+
+        // Print Registered Users Directory Cleanly
+        function printUsersDirectory() {
+            document.body.classList.remove('modal-open');
+            window.print();
+        }
+
+        // Print Compliance Report Modal Cleanly
+        function printReportModal() {
+            document.body.classList.add('modal-open');
+            window.print();
+            document.body.classList.remove('modal-open');
+        }
+
+        // Load Compliance Reports into Line List Table
+        function loadComplianceReports() {
+            let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+            let mappedReports = reports.map((rep, idx) => ({ ...rep, storageIndex: idx }));
+
+            // Sort: New (Unread) reports on top, Viewed reports at bottom
+            mappedReports.sort((a, b) => {
+                let viewedA = a.isViewedTalukaAdmin ? 1 : 0;
+                let viewedB = b.isViewedTalukaAdmin ? 1 : 0;
+                return viewedA - viewedB;
+            });
+
+            renderComplianceTable(mappedReports);
+        }
+
+        // Render Compliance Table Line List
+        function renderComplianceTable(reports) {
+            const tbody = document.getElementById('complianceTableBody');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#666;">No compliance reports found matching criteria.</td></tr>';
+                return;
+            }
+
+            reports.forEach((rep) => {
+                let rowClass = rep.isViewedTalukaAdmin ? 'row-processed' : '';
+                let statusText = rep.isViewedTalukaAdmin ? 'Viewed' : '<span style="color: #2e7d32; font-weight: bold;">New</span>';
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.innerHTML = `
+                    <td>${rep.date || 'N/A'}</td>
+                    <td><b>${rep.staffName || 'N/A'}</b></td>
+                    <td>${rep.unionCouncil || 'N/A'}</td>
+                    <td>${rep.epiCenter || 'N/A'}</td>
+                    <td>${statusText}</td>
+                    <td>${rep.attendanceTime || 'N/A'}</td>
+                    <td><button class="btn-action btn-proof" onclick="openReportModal(${rep.storageIndex})">View Report</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filter Compliance Reports by Name, UC, Center & Date Range
+        function filterComplianceReports() {
+            let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+            let mappedReports = reports.map((rep, idx) => ({ ...rep, storageIndex: idx }));
+
+            let nameVal = document.getElementById('searchCompName').value.toLowerCase();
+            let ucVal = document.getElementById('searchCompUC').value;
+            let centerVal = document.getElementById('searchCompCenter').value;
+            let fromVal = document.getElementById('filterCompFromDate').value;
+            let toVal = document.getElementById('filterCompToDate').value;
+
+            let filtered = mappedReports.filter(r => {
+                let matchName = (r.staffName || '').toLowerCase().includes(nameVal);
+                let matchUC = !ucVal || r.unionCouncil === ucVal;
+                let matchCenter = !centerVal || r.epiCenter === centerVal;
+                
+                let matchDate = true;
+                if (fromVal && r.date < fromVal) matchDate = false;
+                if (toVal && r.date > toVal) matchDate = false;
+
+                return matchName && matchUC && matchCenter && matchDate;
+            });
+
+            filtered.sort((a, b) => {
+                let viewedA = a.isViewedTalukaAdmin ? 1 : 0;
+                let viewedB = b.isViewedTalukaAdmin ? 1 : 0;
+                return viewedA - viewedB;
+            });
+
+            renderComplianceTable(filtered);
+        }
+
+        // Reset Compliance Filters
+        function resetComplianceFilters() {
+            document.getElementById('searchCompName').value = '';
+            document.getElementById('searchCompUC').value = '';
+            document.getElementById('searchCompCenter').value = '';
+            document.getElementById('filterCompFromDate').value = '';
+            document.getElementById('filterCompToDate').value = '';
+            loadComplianceReports();
+        }
+
+        // Image Download & Preview Function
+        function downloadImage(imgSrc) {
+            if(!imgSrc) return;
+            let a = document.createElement('a');
+            a.href = imgSrc;
+            a.download = 'EPI_Report_Image.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Open Modal to View Complete Report Form and mark as Viewed
+        function openReportModal(index) {
+            let reports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
+            let rep = reports[index];
+            if (!rep) return;
+
+            reports[index].isViewedTalukaAdmin = true;
+            localStorage.setItem('epi_daily_reports', JSON.stringify(reports));
+
+            let lhwHtml = rep.lhwNames && rep.lhwNames.length > 0 ? rep.lhwNames.join(', ') : 'None listed';
+            let vaccineImgsHtml = '';
+            if (rep.vaccineImgs && rep.vaccineImgs.length > 0) {
+                rep.vaccineImgs.forEach((img, i) => {
+                    vaccineImgsHtml += `<div style="display:inline-block; margin:5px; text-align:center;"><p style="font-size:11px;">Vaccine Stock ${i+1}</p><img src="${img}" onclick="downloadImage('${img}')" title="Click to Download" /></div>`;
+                });
+            } else {
+                vaccineImgsHtml = '<p style="font-size:12px; color:#666;">No vaccine images uploaded.</p>';
+            }
+
+            let bodyContent = `
+                <p><b>Date:</b> ${rep.date}</p>
+                <p><b>Staff Name:</b> ${rep.staffName}</p>
+                <p><b>District / Taluka:</b> ${rep.district} / ${rep.taluka}</p>
+                <p><b>Union Council:</b> ${rep.unionCouncil}</p>
+                <p><b>Assigned EPI Center:</b> ${rep.epiCenter}</p>
+                <p><b>Attendance Status:</b> ${rep.attendance} (${rep.attendanceTime || ''})</p>
+                <hr style="margin: 10px 0; border:0; border-top:1px solid #ddd;">
+                <p><b>Session Type:</b> ${rep.sessionType || 'N/A'}</p>
+                <p><b>Today's Target:</b> ${rep.todayTarget || 'N/A'}</p>
+                <p><b>Assigned LHWs:</b> ${lhwHtml}</p>
+                <hr style="margin: 10px 0; border:0; border-top:1px solid #ddd;">
+                <h4 style="color:#1b4d3e; margin-bottom:5px;">Attached Images & Proofs (Click any image to preview/download):</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <p style="font-size:11px;">Temperature Record (${rep.tempRecordTime || ''})</p>
+                        ${rep.tempImg ? `<img src="${rep.tempImg}" onclick="downloadImage('${rep.tempImg}')" title="Click to Download" />` : '<p style="font-size:12px; color:#666;">Not uploaded</p>'}
+                    </div>
+                    <div>
+                        <p style="font-size:11px;">Panadol Drops Stock</p>
+                        ${rep.panadolImg ? `<img src="${rep.panadolImg}" onclick="downloadImage('${rep.panadolImg}')" title="Click to Download" />` : '<p style="font-size:12px; color:#666;">Not uploaded</p>'}
+                    </div>
+                    <div>
+                        <p style="font-size:11px;">Session Image</p>
+                        ${rep.sessionImg ? `<img src="${rep.sessionImg}" onclick="downloadImage('${rep.sessionImg}')" title="Click to Download" />` : '<p style="font-size:12px; color:#666;">Not uploaded</p>'}
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <p style="font-size:11px; font-weight:bold;">Vaccine Stock Book Pictures (4 Required):</p>
+                    ${vaccineImgsHtml}
+                </div>
+            `;
+
+            document.getElementById('modalReportBody').innerHTML = bodyContent;
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+            loadComplianceReports(); // Modal band hote hi line list update ho jayegi aur opened report gray ho jayegi
+        }
+
+        // Load and Sort Leave Requests
+        function loadLeaveRequests() {
+            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+            let mappedLeaves = leaves.map((l, idx) => ({ ...l, storageIndex: idx }));
+
+            mappedLeaves.sort((a, b) => {
+                let statusA = (a.status || 'Pending').trim();
+                let statusB = (b.status || 'Pending').trim();
+                
+                if (statusA === 'Pending' && statusB !== 'Pending') return -1;
+                if (statusA !== 'Pending' && statusB === 'Pending') return 1;
+                return 0;
+            });
+
+            renderLeaveTable(mappedLeaves);
+        }
+
+        // Render Leave Table Data
+        function renderLeaveTable(leaves) {
+            const tbody = document.getElementById('leaveTableBody');
+            tbody.innerHTML = '';
+
+            if (leaves.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#666;">No leave applications found matching criteria.</td></tr>';
+                return;
+            }
+
+            leaves.forEach((leave) => {
+                let statusBadge = '';
+                let rowClass = '';
+                let currentStatus = leave.status || 'Pending';
+
+                if(currentStatus === 'Approved') {
+                    statusBadge = '<span style="color: #2e7d32; font-weight: bold;">Approved</span>';
+                    rowClass = 'row-processed';
+                } else if(currentStatus === 'Rejected' || currentStatus === 'Reject') {
+                    statusBadge = '<span style="color: #c62828; font-weight: bold;">Rejected</span>';
+                    rowClass = 'row-processed';
+                } else {
+                    statusBadge = '<span style="color: #f57c00; font-weight: bold;">Pending Review</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.innerHTML = `
+                    <td>${leave.fromDate}</td>
+                    <td><b>${leave.staffName}</b></td>
+                    <td>${leave.unionCouncil || 'N/A'}</td>
+                    <td>${leave.epiCenter || 'N/A'}</td>
+                    <td>${leave.reason || leave.leaveReason || 'N/A'}</td>
+                    <td><button class="btn-action btn-proof" onclick="viewProof('${leave.proofImage}')">View Image</button></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn-action btn-approve" onclick="updateLeaveStatus(${leave.storageIndex}, 'Approved')">Approved</button>
+                        <button class="btn-action btn-reject" onclick="updateLeaveStatus(${leave.storageIndex}, 'Rejected')">Reject</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filter Leaves
+        function filterLeaves() {
+            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+            let mappedLeaves = leaves.map((l, idx) => ({ ...l, storageIndex: idx }));
+
+            let nameVal = document.getElementById('searchName').value.toLowerCase();
+            let ucVal = document.getElementById('searchUC').value;
+            let centerVal = document.getElementById('searchCenter').value;
+            let fromVal = document.getElementById('filterFromDate').value;
+            let toVal = document.getElementById('filterToDate').value;
+
+            let filtered = mappedLeaves.filter(l => {
+                let matchName = (l.staffName || '').toLowerCase().includes(nameVal);
+                let matchUC = !ucVal || l.unionCouncil === ucVal;
+                let matchCenter = !centerVal || l.epiCenter === centerVal;
+                
+                let matchDate = true;
+                if (fromVal && l.fromDate < fromVal) matchDate = false;
+                if (toVal && l.fromDate > toVal) matchDate = false;
+
+                return matchName && matchUC && matchCenter && matchDate;
+            });
+
+            filtered.sort((a, b) => {
+                let statusA = (a.status || 'Pending').trim();
+                let statusB = (b.status || 'Pending').trim();
+                if (statusA === 'Pending' && statusB !== 'Pending') return -1;
+                if (statusA !== 'Pending' && statusB === 'Pending') return 1;
+                return 0;
+            });
+
+            renderLeaveTable(filtered);
+        }
+
+        // Reset Leave Filters
+        function resetLeaveFilters() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchUC').value = '';
+            document.getElementById('searchCenter').value = '';
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+            loadLeaveRequests();
+        }
+
+        // Update Leave Status
+        function updateLeaveStatus(storageIndex, status) {
+            let leaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+            if(leaves[storageIndex]) {
+                leaves[storageIndex].status = status;
+                localStorage.setItem('epi_leave_requests', JSON.stringify(leaves));
+                loadLeaveRequests();
+            }
+        }
+
+        // View Proof Modal
+        function viewProof(imgSrc) {
+            if(!imgSrc || imgSrc === 'undefined') {
+                alert("No leave image attached to this application.");
+                return;
+            }
+            document.getElementById('modalImg').src = imgSrc;
+            document.getElementById('proofModal').style.display = 'flex';
+        }
+
+        function closeProofModal() {
+            document.getElementById('proofModal').style.display = 'none';
+        }
+
+        // Section Switcher
+        function showSection(sectionId) {
+            document.getElementById('overviewSection').style.display = 'none';
+            document.getElementById('usersSection').style.display = 'none';
+            document.getElementById('complianceSection').style.display = 'none';
+            document.getElementById('leaveSection').style.display = 'none';
+            
+            document.getElementById(sectionId).style.display = 'block';
+        }
+    </script>
+</body>
+</html>

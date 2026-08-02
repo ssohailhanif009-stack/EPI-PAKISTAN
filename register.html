@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPI Pakistan - Registration</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 700px; }
+        h2 { color: #1b4d3e; margin-bottom: 5px; font-size: 22px; }
+        .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; flex: 1; }
+        .form-row { display: flex; gap: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #fafafa; }
+        input:focus, select:focus { outline: none; border-color: #1b4d3e; background: #fff; }
+        input:disabled, select:disabled { background-color: #eaeaea; color: #777; cursor: not-allowed; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background-color: #2e7d32; color: white; font-size: 15px; margin-top: 10px; }
+        .btn:hover { background-color: #235d26; }
+        .links { margin-top: 15px; text-align: center; font-size: 13px; }
+        .links a { color: #1b4d3e; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>New User Registration</h2>
+        <p class="subtitle">EPI Civil Hospital Naushahro Feroze</p>
+
+        <form onsubmit="handleRegister(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="fullName" placeholder="Enter full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Designation</label>
+                    <select id="designation" onchange="toggleDesignationFields()" required>
+                        <option value="">Select Designation</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Vaccinator">Vaccinator</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CNIC No.</label>
+                    <input type="text" id="cnic" placeholder="42101-XXXXXXX-X" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile No.</label>
+                    <input type="text" id="mobile" placeholder="03XXXXXXXXX" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>District (Fixed)</label>
+                    <input type="text" id="district" value="Naushahro Feroze" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Taluka (Fixed)</label>
+                    <input type="text" id="taluka" value="Naushahro Feroze" readonly>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Union Council</label>
+                    <select id="unionCouncil" required>
+                        <option value="">Select Union Council</option>
+                        <option value="Abran">Abran</option>
+                        <option value="Bhanbhri">Bhanbhri</option>
+                        <option value="Dageja">Dageja</option>
+                        <option value="Darya Khan Mari">Darya Khan Mari</option>
+                        <option value="Koor Hassan">Koor Hassan</option>
+                        <option value="Mithiani">Mithiani</option>
+                        <option value="Masurji-Waah">Masurji-Waah</option>
+                        <option value="Naushahro Feroze">Naushahro Feroze</option>
+                        <option value="Noorpur">Noorpur</option>
+                        <option value="Padidan">Padidan</option>
+                        <option value="Phull">Phull</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assigned EPI Center</label>
+                    <select id="epiCenter" required>
+                        <option value="">Select EPI Center</option>
+                        <option value="GD Abran">GD Abran</option>
+                        <option value="BHU Kamil Rajper">BHU Kamil Rajper</option>
+                        <option value="BHU Mirapur">BHU Mirapur</option>
+                        <option value="BHU Dageja">BHU Dageja</option>
+                        <option value="RHC Darya Khan Mari">RHC Darya Khan Mari</option>
+                        <option value="GD Attal Bohiyo">GD Attal Bohiyo</option>
+                        <option value="RHC Mithiani">RHC Mithiani</option>
+                        <option value="BHU Masurji Waah">BHU Masurji Waah</option>
+                        <option value="GD Jahan Khan Jatoi">GD Jahan Khan Jatoi</option>
+                        <option value="Civil Hospital Naushahro Feroze">Civil Hospital Naushahro Feroze</option>
+                        <option value="BHU Baig Muhammad Pahnwar">BHU Baig Muhammad Pahnwar</option>
+                        <option value="BHU Pinjal Faqeer">BHU Pinjal Faqeer</option>
+                        <option value="RHC Padidan">RHC Padidan</option>
+                        <option value="BHU Phull">BHU Phull</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="regPassword" placeholder="Create password" required>
+            </div>
+
+            <button type="submit" class="btn">Register & Proceed</button>
+        </form>
+
+        <div class="links">
+            <a href="index.html">Already have an account? Login here</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
+            authDomain: "epi-portal.firebaseapp.com",
+            projectId: "epi-portal",
+            storageBucket: "epi-portal.firebasestorage.app",
+            messagingSenderId: "513980526499",
+            appId: "1:513980526499:web:5b3a1cfe761f93a0767416",
+            measurementId: "G-5JQZ3W8WWK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+
+    <script>
+        window.onload = function() {
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+            const adminExists = users.some(u => u.designation === 'Admin');
+            const designationSelect = document.getElementById('designation');
+            
+            if (adminExists) {
+                for (let i = 0; i < designationSelect.options.length; i++) {
+                    if (designationSelect.options[i].value === 'Admin') {
+                        designationSelect.options[i].disabled = true;
+                        designationSelect.options[i].text = 'Admin (Already Registered)';
+                    }
+                }
+            }
+        };
+
+        function toggleDesignationFields() {
+            const designation = document.getElementById('designation').value;
+            const ucSelect = document.getElementById('unionCouncil');
+            const centerSelect = document.getElementById('epiCenter');
+
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+            const adminExists = users.some(u => u.designation === 'Admin');
+
+            if (designation === 'Admin') {
+                if (adminExists) {
+                    alert('An Administrator account already exists! Only one Admin is allowed.');
+                    document.getElementById('designation').value = '';
+                    return;
+                }
+                ucSelect.value = '';
+                centerSelect.value = '';
+                ucSelect.disabled = true;
+                centerSelect.disabled = true;
+                ucSelect.required = false;
+                centerSelect.required = false;
+            } else {
+                ucSelect.disabled = false;
+                centerSelect.disabled = false;
+                ucSelect.required = true;
+                centerSelect.required = true;
+            }
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+
+            const fullName = document.getElementById('fullName').value;
+            const designation = document.getElementById('designation').value;
+            const cnic = document.getElementById('cnic').value;
+            const mobile = document.getElementById('mobile').value;
+            const district = document.getElementById('district').value;
+            const taluka = document.getElementById('taluka').value;
+            
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+            
+            if (users.some(u => u.cnic === cnic)) {
+                alert('An account with this CNIC already exists!');
+                return;
+            }
+
+            const adminExists = users.some(u => u.designation === 'Admin');
+            if (designation === 'Admin' && adminExists) {
+                alert('Registration failed: System already has an active Administrator!');
+                return;
+            }
+
+            const unionCouncil = designation === 'Admin' ? 'Taluka Controller (All)' : document.getElementById('unionCouncil').value;
+            const epiCenter = designation === 'Admin' ? 'Taluka Office Naushahro Feroze' : document.getElementById('epiCenter').value;
+            const password = document.getElementById('regPassword').value;
+
+            const newUser = { fullName, designation, cnic, mobile, district, taluka, unionCouncil, epiCenter, password };
+            
+            users.push(newUser);
+            
+            localStorage.setItem('epi_users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+            alert('Registration Successful!');
+
+            if (designation === 'Admin') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'vaccinator.html';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPI Pakistan - Login & Reset</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        
+        body { 
+            background: linear-gradient(rgba(27, 77, 62, 0.85), rgba(20, 56, 45, 0.85)), 
+                        url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px;
+        }
+
+        .card { 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2); 
+            width: 100%; 
+            max-width: 450px; 
+            text-align: center;
+        }
+
+        .portal-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px auto;
+            display: block;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h2 { 
+            color: #1b4d3e; 
+            margin-bottom: 5px; 
+            font-size: 24px; 
+            font-weight: 700;
+        }
+
+        .subtitle { 
+            color: #555; 
+            font-size: 13px; 
+            margin-bottom: 20px; 
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .form-group { 
+            margin-bottom: 15px; 
+            text-align: left;
+        }
+
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            font-size: 13px; 
+            color: #333;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            font-size: 14px; 
+        }
+
+        input:focus { 
+            outline: none; 
+            border-color: #1b4d3e; 
+        }
+
+        .btn { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background-color: #1b4d3e; 
+            color: white; 
+            font-size: 15px; 
+            margin-top: 10px; 
+            transition: background 0.3s;
+        }
+
+        .btn:hover { 
+            background-color: #14382d; 
+        }
+
+        .btn-reset { 
+            background-color: #c62828; 
+        }
+
+        .btn-reset:hover { 
+            background-color: #8e0000; 
+        }
+
+        .links { 
+            margin-top: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 13px; 
+        }
+
+        .links a { 
+            color: #1b4d3e; 
+            text-decoration: none; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+
+        .links a:hover { 
+            text-decoration: underline; 
+        }
+
+        #resetForm { display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="logo.png" alt="EPI Logo" class="portal-logo">
+
+        <h2>EPI PAKISTAN PORTAL</h2>
+        <p class="subtitle">
+            Official Monitoring Web Portal<br>
+            <span style="font-size: 11px; color: #666;">Under the supervision of the Taluka Superintendent of Vaccination, Taluka Naushahro Feroze</span>
+        </p>
+        
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>CNIC No. (as Username)</label>
+                <input type="text" id="loginCNIC" placeholder="42101-1234567-1" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+            <div class="links">
+                <a onclick="showResetForm(true)">Reset Password</a>
+                <a href="register.html">Register New User</a>
+            </div>
+        </form>
+
+        <!-- RESET PASSWORD FORM -->
+        <form id="resetForm" onsubmit="handleReset(event)">
+            <h3 style="color: #c62828; margin-bottom: 15px; font-size: 16px;">Reset Password</h3>
+            <div class="form-group">
+                <label>Registered CNIC No.</label>
+                <input type="text" id="resetCNIC" placeholder="42101-1234567-1" required>
+            </div>
+            <div class="form-group">
+                <label>Registered Mobile No.</label>
+                <input type="text" id="resetMobile" placeholder="03XXXXXXXXX" required>
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" required>
+            </div>
+            <button type="submit" class="btn btn-reset">Update Password</button>
+            <div class="links" style="justify-content: center; margin-top: 15px;">
+                <a onclick="showResetForm(false)">← Back to Login</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Firebase SDK Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
+            authDomain: "epi-portal.firebaseapp.com",
+            projectId: "epi-portal",
+            storageBucket: "epi-portal.firebasestorage.app",
+            messagingSenderId: "513980526499",
+            appId: "1:513980526499:web:5b3a1cfe761f93a0767416",
+            measurementId: "G-5JQZ3W8WWK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+
+    <script>
+        function showResetForm(isReset) {
+            if (isReset) {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('resetForm').style.display = 'block';
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('resetForm').style.display = 'none';
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const cnic = document.getElementById('loginCNIC').value;
+            const password = document.getElementById('loginPassword').value;
+
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+
+            if (cnic === 'admin' && password === 'admin') {
+                const defaultAdmin = {
+                    fullName: 'System Administrator', designation: 'Admin', cnic: 'admin',
+                    mobile: '03000000000', district: 'Naushahro Feroze', taluka: 'Naushahro Feroze',
+                    unionCouncil: 'Naushahro Feroze', epiCenter: 'Civil Hospital Naushahro Feroze'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(defaultAdmin));
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            const user = users.find(u => u.cnic === cnic && u.password === password);
+            if (!user) {
+                alert('Invalid CNIC or Password!');
+                return;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
+            if (user.designation === 'Admin') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'vaccinator.html';
+            }
+        }
+
+        function handleReset(event) {
+            event.preventDefault();
+            const cnic = document.getElementById('resetCNIC').value;
+            const mobile = document.getElementById('resetMobile').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
+            const userIndex = users.findIndex(u => u.cnic === cnic && u.mobile === mobile);
+
+            if (userIndex === -1) {
+                alert('No account found with this CNIC and Mobile No.!');
+                return;
+            }
+
+            users[userIndex].password = newPassword;
+            localStorage.setItem('epi_users', JSON.stringify(users));
+
+            alert('Password successfully updated! Now you can login.');
+            showResetForm(false);
+        }
+    </script>
+</body>
+</html>
