@@ -187,7 +187,6 @@
 
         async function saveLeaveData(newLeave) {
             try {
-                // Save to Firebase Firestore Collection 'epi_leave_requests'
                 await db.collection('epi_leave_requests').add(newLeave);
                 alert('Leave application submitted successfully to Admin via Firebase!');
                 
