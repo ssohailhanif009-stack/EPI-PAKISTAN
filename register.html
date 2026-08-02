@@ -35,9 +35,8 @@
                 </div>
                 <div class="form-group">
                     <label>Designation</label>
-                    <select id="designation" onchange="toggleDesignationFields()" required>
+                    <select id="designation" required>
                         <option value="">Select Designation</option>
-                        <option value="Admin">Admin</option>
                         <option value="Vaccinator">Vaccinator</option>
                     </select>
                 </div>
@@ -121,7 +120,7 @@
     <!-- Firebase Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
@@ -136,26 +135,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        window.toggleDesignationFields = function() {
-            const designation = document.getElementById('designation').value;
-            const ucSelect = document.getElementById('unionCouncil');
-            const centerSelect = document.getElementById('epiCenter');
-
-            if (designation === 'Admin') {
-                ucSelect.value = '';
-                centerSelect.value = '';
-                ucSelect.disabled = true;
-                centerSelect.disabled = true;
-                ucSelect.required = false;
-                centerSelect.required = false;
-            } else {
-                ucSelect.disabled = false;
-                centerSelect.disabled = false;
-                ucSelect.required = true;
-                centerSelect.required = true;
-            }
-        };
-
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -168,23 +147,11 @@
             const mobile = document.getElementById('mobile').value.trim();
             const district = document.getElementById('district').value;
             const taluka = document.getElementById('taluka').value;
-            const unionCouncil = designation === 'Admin' ? 'Taluka Controller (All)' : document.getElementById('unionCouncil').value;
-            const epiCenter = designation === 'Admin' ? 'Taluka Office Naushahro Feroze' : document.getElementById('epiCenter').value;
+            const unionCouncil = document.getElementById('unionCouncil').value;
+            const epiCenter = document.getElementById('epiCenter').value;
             const password = document.getElementById('regPassword').value;
 
             try {
-                // Check if Admin already exists in Firestore
-                if (designation === 'Admin') {
-                    const adminQuery = query(collection(db, "users"), where("designation", "==", "Admin"));
-                    const adminSnap = await getDocs(adminQuery);
-                    if (!adminSnap.empty) {
-                        alert('An Administrator account already exists in database!');
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Register & Proceed';
-                        return;
-                    }
-                }
-
                 // Check if CNIC already exists
                 const userRef = doc(db, "users", cnic);
                 const userSnap = await getDoc(userRef);
@@ -201,12 +168,8 @@
 
                 localStorage.setItem('currentUser', JSON.stringify(userData));
                 alert('Registration Successful!');
+                window.location.href = 'vaccinator.html';
 
-                if (designation === 'Admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'vaccinator.html';
-                }
             } catch (error) {
                 console.error("Error writing document: ", error);
                 alert('Error during registration: ' + error.message);
