@@ -138,35 +138,12 @@
     </script>
 
     <script>
-        window.onload = function() {
-            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
-            const adminExists = users.some(u => u.designation === 'Admin');
-            const designationSelect = document.getElementById('designation');
-            
-            if (adminExists) {
-                for (let i = 0; i < designationSelect.options.length; i++) {
-                    if (designationSelect.options[i].value === 'Admin') {
-                        designationSelect.options[i].disabled = true;
-                        designationSelect.options[i].text = 'Admin (Already Registered)';
-                    }
-                }
-            }
-        };
-
         function toggleDesignationFields() {
             const designation = document.getElementById('designation').value;
             const ucSelect = document.getElementById('unionCouncil');
             const centerSelect = document.getElementById('epiCenter');
 
-            let users = JSON.parse(localStorage.getItem('epi_users')) || [];
-            const adminExists = users.some(u => u.designation === 'Admin');
-
             if (designation === 'Admin') {
-                if (adminExists) {
-                    alert('An Administrator account already exists! Only one Admin is allowed.');
-                    document.getElementById('designation').value = '';
-                    return;
-                }
                 ucSelect.value = '';
                 centerSelect.value = '';
                 ucSelect.disabled = true;
@@ -195,12 +172,6 @@
             
             if (users.some(u => u.cnic === cnic)) {
                 alert('An account with this CNIC already exists!');
-                return;
-            }
-
-            const adminExists = users.some(u => u.designation === 'Admin');
-            if (designation === 'Admin' && adminExists) {
-                alert('Registration failed: System already has an active Administrator!');
                 return;
             }
 
