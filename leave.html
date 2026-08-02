@@ -3,123 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Leave Application - EPI Pakistan</title>
+    <title>Staff Leave Request & Approval Portal - EPI Pakistan</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: #f4f7f6; color: #333; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 800px; margin-bottom: 20px; }
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .card { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 800px; margin-bottom: 25px; backdrop-filter: blur(5px); }
         h2 { color: #1b4d3e; margin-bottom: 5px; font-size: 22px; }
         .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; flex: 1; }
+        .form-group { margin-bottom: 15px; }
         .form-row { display: flex; gap: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #1b4d3e; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #fafafa; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #1b4d3e; background: #fff; }
         input[readonly], select:disabled { background-color: #e9ecef; color: #495057; cursor: not-allowed; border-color: #ced4da; }
-        textarea { resize: vertical; height: 70px; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background-color: #1b4d3e; color: white; font-size: 15px; margin-top: 10px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; background-color: #1b4d3e; color: white; font-size: 15px; margin-top: 10px; transition: background 0.2s; }
         .btn:hover { background-color: #14382c; }
-        .table-responsive { overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        table th, table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; font-size: 13px; }
-        table th { background: #f8f9fa; color: #1b4d3e; font-weight: 600; }
-        .badge-pending { color: #f57c00; font-weight: bold; }
-        .badge-approved { color: #2e7d32; font-weight: bold; }
-        .badge-rejected { color: #c62828; font-weight: bold; }
-        .btn-proof { background: #0288d1; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; }
-        .back-link { display: inline-block; margin-bottom: 15px; color: #1b4d3e; text-decoration: none; font-weight: bold; font-size: 13px; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #fff; background: #1b4d3e; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; }
+        
+        /* Leave Status Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
+        th { background-color: #1b4d3e; color: white; }
+        .status-pending { color: #d97706; font-weight: bold; }
+        .status-approved { color: #059669; font-weight: bold; }
+        .status-rejected { color: #dc2626; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <a href="vaccinator.html" class="back-link">&larr; Back to Dashboard</a>
-        <h2>Submit Leave Application</h2>
+        <h2>Staff Leave Application Portal</h2>
         <p class="subtitle">EPI Civil Hospital Naushahro Feroze</p>
 
         <form id="leaveForm">
             <div class="form-row">
                 <div class="form-group" style="flex: 1;">
-                    <label>Staff Full Name (Fixed)</label>
+                    <label>Staff Name</label>
                     <input type="text" id="staffName" readonly required>
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Application Date</label>
-                    <input type="date" id="applicationDate" required>
+                    <label>EPI Center / Designation</label>
+                    <input type="text" id="staffCenter" readonly required>
                 </div>
             </div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label>Union Council (Fixed)</label>
-                    <select id="unionCouncil" disabled required>
-                        <option value="">Select Union Council</option>
-                        <option value="Abran">Abran</option>
-                        <option value="Bhanbhri">Bhanbhri</option>
-                        <option value="Dageja">Dageja</option>
-                        <option value="Darya Khan Mari">Darya Khan Mari</option>
-                        <option value="Koor Hassan">Koor Hassan</option>
-                        <option value="Mithiani">Mithiani</option>
-                        <option value="Masurji-Waah">Masurji-Waah</option>
-                        <option value="Naushahro Feroze">Naushahro Feroze</option>
-                        <option value="Noorpur">Noorpur</option>
-                        <option value="Padidan">Padidan</option>
-                        <option value="Phull">Phull</option>
-                    </select>
+                <div class="form-group" style="flex: 1;">
+                    <label>Leave Start Date</label>
+                    <input type="date" id="startDate" required>
                 </div>
-                <div class="form-group">
-                    <label>Assigned EPI Center (Fixed)</label>
-                    <select id="epiCenter" disabled required>
-                        <option value="">Select EPI Center</option>
-                        <option value="GD Abran">GD Abran</option>
-                        <option value="BHU Kamil Rajper">BHU Kamil Rajper</option>
-                        <option value="BHU Mirapur">BHU Mirapur</option>
-                        <option value="BHU Dageja">BHU Dageja</option>
-                        <option value="RHC Darya Khan Mari">RHC Darya Khan Mari</option>
-                        <option value="GD Attal Bohiyo">GD Attal Bohiyo</option>
-                        <option value="RHC Mithiani">RHC Mithiani</option>
-                        <option value="BHU Masurji Waah">BHU Masurji Waah</option>
-                        <option value="GD Jahan Khan Jatoi">GD Jahan Khan Jatoi</option>
-                        <option value="Civil Hospital Naushahro Feroze">Civil Hospital Naushahro Feroze</option>
-                        <option value="BHU Baig Muhammad Pahnwar">BHU Baig Muhammad Pahnwar</option>
-                        <option value="BHU Pinjal Faqeer">BHU Pinjal Faqeer</option>
-                        <option value="RHC Padidan">RHC Padidan</option>
-                        <option value="BHU Phull">BHU Phull</option>
-                    </select>
+                <div class="form-group" style="flex: 1;">
+                    <label>Leave End Date</label>
+                    <input type="date" id="endDate" required>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Reason for Leave</label>
-                <textarea id="reason" placeholder="Enter reason for leave..." required></textarea>
+                <textarea id="leaveReason" rows="3" placeholder="Enter detailed reason for leave..." required></textarea>
             </div>
 
             <div class="form-group">
-                <label>Upload Application / Medical Proof (Image / Camera)</label>
-                <input type="file" id="proofImage" accept="image/*" capture="environment" required>
+                <label>Supporting Document / Application Picture (Optional)</label>
+                <input type="file" id="leaveDocImg" accept="image/*" capture="environment">
             </div>
 
-            <button type="submit" class="btn" id="submitLeaveBtn">Submit Application to Admin</button>
+            <button type="submit" class="btn" id="submitLeaveBtn">Submit Leave Request</button>
         </form>
     </div>
 
+    <!-- My Leave Status Card -->
     <div class="card">
-        <h3>My Submitted Leave Applications (Line List)</h3>
-        <p class="subtitle">Track live status of your submitted requests.</p>
-        <div class="table-responsive">
+        <h2>My Leave Application Status History</h2>
+        <p class="subtitle">Track approval status from Admin / TSV</p>
+        <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Union Council</th>
-                        <th>EPI Center</th>
+                        <th>Applied Date</th>
+                        <th>From - To</th>
                         <th>Reason</th>
-                        <th>Proof</th>
                         <th>Status</th>
                     </tr>
+                 sweeteners
+                    <tr id="noLeaveRow">
+                        <td colspan="4" style="text-align: center; color: #777;">No leave applications found.</td>
+                    </tr>
                 </thead>
-                <tbody id="lineListTable">
-                    <tr><td colspan="6" style="text-align:center; color:#666;">Loading applications...</td></tr>
+                <tbody id="leaveHistoryTableBody">
                 </tbody>
             </table>
         </div>
@@ -142,124 +124,135 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        window.addEventListener('DOMContentLoaded', () => {
-            let today = new Date().toISOString().split('T')[0];
-            document.getElementById('applicationDate').value = today;
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-            let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        window.addEventListener('DOMContentLoaded', () => {
             if (currentUser) {
-                if(document.getElementById('staffName')) document.getElementById('staffName').value = currentUser.fullName || '';
-                if(currentUser.unionCouncil && document.getElementById('unionCouncil')) document.getElementById('unionCouncil').value = currentUser.unionCouncil;
-                if(currentUser.epiCenter && document.getElementById('epiCenter')) document.getElementById('epiCenter').value = currentUser.epiCenter;
+                document.getElementById('staffName').value = currentUser.fullName || '';
+                document.getElementById('staffCenter').value = (currentUser.epiCenter || '') + ' (' + (currentUser.designation || 'Vaccinator') + ')';
+                loadLeaveHistory();
             } else {
                 alert("No active session found. Please login first.");
                 window.location.href = "index.html";
-                return;
             }
-            loadLineList();
         });
+
+        // Image compression function for leave document image (Firestore 1MB Limit Prevention)
+        const readFileAsDataURL = (file) => {
+            return new Promise((resolve) => {
+                if (!file) { resolve(''); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        };
 
         document.getElementById('leaveForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const submitBtn = document.getElementById('submitLeaveBtn');
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Submitting...';
+            submitBtn.innerText = 'Compressing & Submitting...';
 
-            let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-            
-            const staffName = currentUser.fullName || document.getElementById('staffName').value;
-            const unionCouncil = currentUser.unionCouncil || document.getElementById('unionCouncil').value;
-            const epiCenter = currentUser.epiCenter || document.getElementById('epiCenter').value;
-            const applicationDate = document.getElementById('applicationDate').value;
-            const reason = document.getElementById('reason').value;
-            const fileInput = document.getElementById('proofImage');
+            let docFile = document.getElementById('leaveDocImg').files[0];
+            let compressedImg = await readFileAsDataURL(docFile);
 
-            const reader = new FileReader();
-            if (fileInput.files && fileInput.files[0]) {
-                reader.readAsDataURL(fileInput.files[0]);
-                reader.onload = async function (e) {
-                    const proofImage = e.target.result;
-                    const newLeave = { 
-                        staffName, 
-                        unionCouncil, 
-                        epiCenter, 
-                        fromDate: applicationDate, 
-                        toDate: applicationDate, 
-                        reason, 
-                        proofImage, 
-                        status: 'Pending'
-                    };
+            let leaveData = {
+                staffName: currentUser.fullName,
+                epiCenter: currentUser.epiCenter || 'N/A',
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                reason: document.getElementById('leaveReason').value,
+                leaveDocImg: compressedImg,
+                status: 'Pending', // Pending, Approved, Rejected
+                appliedAt: new Date().toISOString().split('T')[0]
+            };
 
-                    try {
-                        // Save to Firebase Firestore
-                        await addDoc(collection(db, 'epi_leave_requests'), newLeave);
+            try {
+                await addDoc(collection(db, 'epi_leave_requests'), leaveData);
+                
+                // Also save locally as backup
+                let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+                localLeaves.push(leaveData);
+                localStorage.setItem('epi_leave_requests', JSON.stringify(localLeaves));
 
-                        // Save to LocalStorage for immediate fallback & admin sync
-                        let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-                        localLeaves.push(newLeave);
-                        localStorage.setItem('epi_leave_requests', JSON.stringify(localLeaves));
-
-                        alert('Leave application submitted successfully to Admin!');
-                        document.getElementById('reason').value = '';
-                        document.getElementById('proofImage').value = '';
-                        loadLineList();
-                    } catch (error) {
-                        console.error("Error submitting leave:", error);
-                        alert("Failed to submit leave: " + error.message);
-                    } finally {
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = 'Submit Application to Admin';
-                    }
-                };
-            } else {
-                alert("Please attach proof image.");
+                alert('Leave request submitted successfully!');
+                location.reload();
+            } catch (error) {
+                console.error("Error submitting leave: ", error);
+                alert("Failed to submit leave: " + error.message);
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Submit Application to Admin';
+                submitBtn.innerText = 'Submit Leave Request';
             }
         });
 
-        async function loadLineList() {
-            let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            const tbody = document.getElementById('lineListTable');
+        async function loadLeaveHistory() {
+            let tbody = document.getElementById('leaveHistoryTableBody');
             tbody.innerHTML = '';
-
-            if (!currentUser || !currentUser.fullName) return;
-
+            
             try {
-                let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-                let userLeaves = localLeaves.filter(l => l.staffName === currentUser.fullName);
+                let q = query(collection(db, 'epi_leave_requests'), where("staffName", "==", currentUser.fullName));
+                let querySnapshot = await getDocs(q);
+                
+                let leaves = [];
+                querySnapshot.forEach((doc) => {
+                    leaves.push(doc.data());
+                });
 
-                if (userLeaves.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#666;">No leave applications found.</td></tr>';
-                    return;
+                // Fallback to local storage if firebase is empty or offline
+                if (leaves.length === 0) {
+                    let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
+                    leaves = localLeaves.filter(l => l.staffName === currentUser.fullName);
                 }
 
-                userLeaves.forEach(l => {
-                    let statusClass = 'badge-pending';
-                    let statusText = l.status || 'Pending';
-                    if (statusText === 'Approved') statusClass = 'badge-approved';
-                    if (statusText === 'Rejected') statusClass = 'badge-rejected';
+                if (leaves.length > 0) {
+                    document.getElementById('noLeaveRow').style.display = 'none';
+                    leaves.forEach(leave => {
+                        let statusClass = 'status-pending';
+                        if(leave.status === 'Approved') statusClass = 'status-approved';
+                        if(leave.status === 'Rejected') statusClass = 'status-rejected';
 
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${l.fromDate}</td>
-                        <td>${l.unionCouncil}</td>
-                        <td>${l.epiCenter}</td>
-                        <td>${l.reason}</td>
-                        <td><button class="btn-proof" onclick="viewImage('${l.proofImage}')">View</button></td>
-                        <td><span class="${statusClass}">${statusText}</span></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                console.error("Error loading line list:", error);
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${leave.appliedAt || 'N/A'}</td>
+                            <td>${leave.startDate} to ${leave.endDate}</td>
+                            <td>${leave.reason}</td>
+                            <td class="${statusClass}">${leave.status}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading leave history: ", e);
             }
         }
-
-        window.viewImage = function(imgBase64) {
-            let win = window.open();
-            win.document.write('<iframe src="' + imgBase64 + '" frameborder="0" style="border:0; top:0; left:0; bottom:0; right:0; width:100%; height:100%;" allowfullscreen></iframe>');
-        };
     </script>
 </body>
 </html>
