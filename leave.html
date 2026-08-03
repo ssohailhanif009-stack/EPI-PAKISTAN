@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Leave Request & Approval Portal - EPI Pakistan</title>
+    <!-- PWA Manifest & Theme Color Added -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1b4d3e">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { 
@@ -96,12 +99,11 @@
                         <th>Reason</th>
                         <th>Status</th>
                     </tr>
-                 sweeteners
+                </thead>
+                <tbody id="leaveHistoryTableBody">
                     <tr id="noLeaveRow">
                         <td colspan="4" style="text-align: center; color: #777;">No leave applications found.</td>
                     </tr>
-                </thead>
-                <tbody id="leaveHistoryTableBody">
                 </tbody>
             </table>
         </div>
@@ -110,6 +112,15 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+        // Service Worker Registration for PWA Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((reg) => console.log('Service Worker registered successfully!'))
+                    .catch((err) => console.log('Service Worker registration failed: ', err));
+            });
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyClwlrw3urCt5vBWEd7imLZ6mGRQczDffI",
