@@ -203,7 +203,6 @@
             };
 
             try {
-                // Sirf Firebase par save hoga, local storage ka chakkar khatam
                 await addDoc(collection(db, 'epi_leave_requests'), leaveData);
 
                 alert('Leave request submitted successfully!');
@@ -218,7 +217,6 @@
 
         async function loadLeaveHistory() {
             let tbody = document.getElementById('leaveHistoryTableBody');
-            tbody.innerHTML = '';
             
             try {
                 let q = query(collection(db, 'epi_leave_requests'), where("staffName", "==", currentUser.fullName));
@@ -230,7 +228,7 @@
                 });
 
                 if (leaves.length > 0) {
-                    document.getElementById('noLeaveRow').style.display = 'none';
+                    tbody.innerHTML = '';
                     leaves.forEach(leave => {
                         let statusClass = 'status-pending';
                         if(leave.status === 'Approved') statusClass = 'status-approved';
@@ -249,8 +247,7 @@
                         tbody.appendChild(tr);
                     });
                 } else {
-                    document.getElementById('noLeaveRow').style.display = '';
-                    document.getElementById('noLeaveRow').innerHTML = '<td colspan="5" style="text-align: center; color: #777;">No leave applications found.</td>';
+                    tbody.innerHTML = `<tr id="noLeaveRow"><td colspan="5" style="text-align: center; color: #777;">No leave applications found.</td></tr>`;
                 }
             } catch (e) {
                 console.error("Error loading leave history from Firebase:", e);
