@@ -26,6 +26,7 @@
             padding: 20px; 
             backdrop-filter: blur(5px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .sidebar-brand {
@@ -71,7 +72,7 @@
             padding-left: 15px;
         }
 
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; width: 100%; }
 
         header { 
             display: flex; 
@@ -83,6 +84,8 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
             margin-bottom: 25px; 
             backdrop-filter: blur(5px);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         header h2 {
@@ -115,7 +118,6 @@
             margin-bottom: 5px;
         }
 
-        /* Action Buttons Grid Styling */
         .action-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -142,6 +144,22 @@
             transform: translateY(-2px);
             color: white;
         }
+
+        /* Mobile Responsive View Fix */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 15px;
+            }
+            .main-content {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -153,7 +171,6 @@
         <ul>
             <li><a href="vaccinator.html" class="active">My Dashboard</a></li>
             <li><a href="leave.html">Leave Approval</a></li>
-            <!-- Reporting Form link updated to point to report.html -->
             <li><a href="report.html">Reporting Form</a></li>
             <li><a href="index.html" onclick="localStorage.removeItem('currentUser')">Logout</a></li>
         </ul>
@@ -170,7 +187,6 @@
             <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Official operational links for daily management.</p>
             <div class="action-grid">
                 <a href="leave.html" class="action-btn">Leave Approval / Request</a>
-                <!-- Quick action button updated to point to report.html -->
                 <a href="report.html" class="action-btn">Reporting Form</a>
             </div>
         </div>
@@ -178,19 +194,16 @@
         <div class="card">
             <h3>Assigned Staff Profile & Bio-Data</h3>
             <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Your official government record status: Verified & Active.</p>
-            <div id="profileInfoContent" style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #1b4d3e;">
+            <div id="profileInfoContent" style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #1b4d3e; word-break: break-word;">
                 Loading profile records...
             </div>
         </div>
     </div>
 
     <script>
-        // Service Worker Registration for PWA Support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((reg) => console.log('Service Worker registered successfully!'))
-                    .catch((err) => console.log('Service Worker registration failed: ', err));
+                navigator.serviceWorker.register('sw.js').catch((err) => console.log('SW registration failed: ', err));
             });
         }
 
