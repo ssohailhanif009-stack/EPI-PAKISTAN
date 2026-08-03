@@ -201,12 +201,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
-        // Service Worker Registration for PWA Support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((reg) => console.log('Service Worker registered successfully!'))
-                    .catch((err) => console.log('Service Worker registration failed: ', err));
+                navigator.serviceWorker.register('sw.js').catch((err) => console.log('SW registration failed: ', err));
             });
         }
 
@@ -268,7 +265,6 @@
             });
         });
 
-        // Image compression function taake size 1MB se kam rahe (Firestore limit fix)
         const readFileAsDataURL = (file) => {
             return new Promise((resolve) => {
                 if (!file) { resolve(''); return; }
@@ -280,25 +276,17 @@
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
-                        
                         const MAX_WIDTH = 800;
                         const MAX_HEIGHT = 800;
                         if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                         } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                         }
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        
                         resolve(canvas.toDataURL('image/jpeg', 0.6));
                     }
                 };
@@ -382,10 +370,6 @@
             try {
                 await addDoc(collection(db, 'epi_daily_reports'), reportData);
 
-                let localReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-                localReports.push(reportData);
-                localStorage.setItem('epi_daily_reports', JSON.stringify(localReports));
-
                 alert('Daily Administrative Report successfully submitted to Admin!');
                 location.reload();
             } catch (error) {
@@ -400,20 +384,34 @@
             let targetDate = document.getElementById('downloadDateInput').value;
             let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
-            let localReports = JSON.parse(localStorage.getItem('epi_daily_reports')) || [];
-            let foundReport = localReports.find(r => r.date === targetDate && r.staffName === currentUser.fullName);
+            try {
+                let q = query(
+                    collection(db, 'epi_daily_reports'), 
+                    where("staffName", "==", currentUser.fullName),
+                    where("date", "==", targetDate)
+                );
+                let querySnapshot = await getDocs(q);
+                
+                let foundReport = null;
+                querySnapshot.forEach((doc) => {
+                    foundReport = doc.data();
+                });
 
-            if (!foundReport) {
-                alert('No report found submitted for date: ' + targetDate);
-                return;
+                if (!foundReport) {
+                    alert('No report found submitted on Firebase for date: ' + targetDate);
+                    return;
+                }
+
+                document.getElementById('reportDate').value = foundReport.date;
+                document.getElementById('attendance').value = foundReport.attendance;
+                document.getElementById('attendanceTime').value = foundReport.attendanceTime;
+                document.getElementById('sessionType').value = foundReport.sessionType || '';
+                document.getElementById('todayTarget').value = foundReport.todayTarget || '';
+                window.print();
+            } catch (e) {
+                console.error("Error fetching report for PDF: ", e);
+                alert("Could not load report for download.");
             }
-
-            document.getElementById('reportDate').value = foundReport.date;
-            document.getElementById('attendance').value = foundReport.attendance;
-            document.getElementById('attendanceTime').value = foundReport.attendanceTime;
-            document.getElementById('sessionType').value = foundReport.sessionType || '';
-            document.getElementById('todayTarget').value = foundReport.todayTarget || '';
-            window.print();
         };
     </script>
 </body>
