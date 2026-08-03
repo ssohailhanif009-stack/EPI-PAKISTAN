@@ -203,72 +203,59 @@
             };
 
             try {
+                // Sirf Firebase par save hoga, local storage ka chakkar khatam
                 await addDoc(collection(db, 'epi_leave_requests'), leaveData);
-                
-                let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-                localLeaves.push(leaveData);
-                localStorage.setItem('epi_leave_requests', JSON.stringify(localLeaves));
 
                 alert('Leave request submitted successfully!');
                 location.reload();
             } catch (error) {
                 console.error("Error submitting leave: ", error);
-                let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-                localLeaves.push(leaveData);
-                localStorage.setItem('epi_leave_requests', JSON.stringify(localLeaves));
-
-                alert('Leave request saved locally and submitted!');
-                location.reload();
+                alert('Failed to submit leave: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Leave Request';
             }
         });
 
         async function loadLeaveHistory() {
             let tbody = document.getElementById('leaveHistoryTableBody');
+            tbody.innerHTML = '';
             
-            let leaves = [];
             try {
                 let q = query(collection(db, 'epi_leave_requests'), where("staffName", "==", currentUser.fullName));
                 let querySnapshot = await getDocs(q);
+                
+                let leaves = [];
                 querySnapshot.forEach((doc) => {
                     leaves.push(doc.data());
                 });
-            } catch (e) {
-                console.log("Firebase fetch error, checking local storage:", e);
-            }
 
-            let localLeaves = JSON.parse(localStorage.getItem('epi_leave_requests')) || [];
-            let userLocalLeaves = localLeaves.filter(l => l.staffName === currentUser.fullName);
-            
-            userLocalLeaves.forEach(localItem => {
-                let exists = leaves.some(l => l.startDate === localItem.startDate && l.reason === localItem.reason);
-                if (!exists) {
-                    leaves.push(localItem);
+                if (leaves.length > 0) {
+                    document.getElementById('noLeaveRow').style.display = 'none';
+                    leaves.forEach(leave => {
+                        let statusClass = 'status-pending';
+                        if(leave.status === 'Approved') statusClass = 'status-approved';
+                        if(leave.status === 'Rejected') statusClass = 'status-rejected';
+
+                        let imgHtml = leave.leaveDocImg ? `<img src="${leave.leaveDocImg}" class="leave-thumb" onclick="window.open('${leave.leaveDocImg}')" title="Click to view full image">` : 'No Image';
+
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${leave.appliedAt || 'N/A'}</td>
+                            <td>${leave.startDate} to ${leave.endDate}</td>
+                            <td>${leave.reason}</td>
+                            <td>${imgHtml}</td>
+                            <td class="${statusClass}">${leave.status}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    document.getElementById('noLeaveRow').style.display = '';
+                    document.getElementById('noLeaveRow').innerHTML = '<td colspan="5" style="text-align: center; color: #777;">No leave applications found.</td>';
                 }
-            });
-
-            if (leaves.length > 0) {
-                document.getElementById('noLeaveRow').style.display = 'none';
-                tbody.innerHTML = ''; 
-                leaves.forEach(leave => {
-                    let statusClass = 'status-pending';
-                    if(leave.status === 'Approved') statusClass = 'status-approved';
-                    if(leave.status === 'Rejected') statusClass = 'status-rejected';
-
-                    let imgHtml = leave.leaveDocImg ? `<img src="${leave.leaveDocImg}" class="leave-thumb" onclick="window.open('${leave.leaveDocImg}')" title="Click to view full image">` : 'No Image';
-
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${leave.appliedAt || 'N/A'}</td>
-                        <td>${leave.startDate} to ${leave.endDate}</td>
-                        <td>${leave.reason}</td>
-                        <td>${imgHtml}</td>
-                        <td class="${statusClass}">${leave.status}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+            } catch (e) {
+                console.error("Error loading leave history from Firebase:", e);
             }
         }
     </script>
 </body>
 </html>
-```[cite: 3]
